@@ -121,7 +121,7 @@ export default function Index() {
       }
 
       const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), timeoutMs);
+      const t = setTimeout(() => controller.abort(new Error("timeout")), timeoutMs);
 
       try {
         const res = await fetch(finalUrl, {
@@ -142,6 +142,14 @@ export default function Index() {
       } catch (err: any) {
         // Normalize all fetch errors (including AbortError) to null so callers can
         // handle retries/fallbacks without uncaught exceptions.
+        try {
+          if (err?.name === "AbortError") {
+            // provide clearer message in console for debugging
+            console.warn("Fetch aborted:", finalUrl, err?.message ?? err);
+          } else {
+            console.warn("Fetch failed:", finalUrl, err?.message ?? err);
+          }
+        } catch {}
         return null;
       } finally {
         clearTimeout(t);

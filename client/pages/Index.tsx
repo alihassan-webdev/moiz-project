@@ -6,6 +6,21 @@ import { toast } from "@/hooks/use-toast";
 
 type ApiResult = string;
 
+type AppSettings = {
+  initialTimeoutMs: number;
+  retryTimeoutMs: number;
+  autoRetry: boolean;
+  defaultQuery: string;
+};
+
+const SETTINGS_KEY = "app:settings" as const;
+const DEFAULT_SETTINGS: AppSettings = {
+  initialTimeoutMs: 25000,
+  retryTimeoutMs: 55000,
+  autoRetry: true,
+  defaultQuery: "",
+};
+
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
 export default function Index() {
@@ -14,6 +29,19 @@ export default function Index() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ApiResult | null>(null);
+  const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(SETTINGS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<AppSettings>;
+        const s = { ...DEFAULT_SETTINGS, ...parsed };
+        setSettings(s);
+        if (s.defaultQuery) setQuery(s.defaultQuery);
+      }
+    } catch {}
+  }, []);
 
   const onDrop = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
     e.preventDefault();
@@ -78,7 +106,7 @@ export default function Index() {
       let res: Response | null = null;
 
       try {
-        res = await send(25_000);
+        res = await send(settings.initialTimeoutMs);
       } catch (err: any) {
         if (err?.name === "AbortError") {
           toast({ title: "Slow connection", description: "Retrying..." });
@@ -87,9 +115,9 @@ export default function Index() {
         }
       }
 
-      if (!res || !res.ok || res.status === 504) {
+      if ((!res || !res.ok || res.status === 504) && settings.autoRetry) {
         await new Promise((r) => setTimeout(r, 800));
-        res = await send(55_000);
+        res = await send(settings.retryTimeoutMs);
       }
 
       const contentType = res.headers.get("content-type") || "";

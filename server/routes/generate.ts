@@ -80,7 +80,7 @@ export const handleGenerate: RequestHandler = async (req, res) => {
       const errText = await upstream.text().catch(() => upstream.statusText);
       return res
         .status(upstream.status)
-        .json({ error: "Upstream error", detail: errText });
+        .json({ error: true, message: errText || "Upstream error" });
     }
 
     if (contentType.includes("application/json")) {
@@ -95,13 +95,10 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     return res.status(200).json({ result: text });
   } catch (err: any) {
     if (err?.name === "AbortError") {
-      return res.status(504).json({ error: "Upstream timeout" });
+      return res.status(504).json({ error: true, message: "Upstream timeout" });
     }
     return res
       .status(500)
-      .json({
-        error: "Internal server error",
-        detail: err?.message || String(err),
-      });
+      .json({ error: true, message: err?.message || "Internal Server Error" });
   }
 };

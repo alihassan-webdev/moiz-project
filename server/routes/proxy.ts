@@ -4,8 +4,8 @@ const EXTERNAL = "https://api-va5v.onrender.com/generate-questions" as const;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Accept, Authorization",
+  "Access-Control-Allow-Methods": "*",
+  "Access-Control-Allow-Headers": "*",
 } as const;
 
 export const handleProxy: RequestHandler = async (req, res) => {
@@ -36,11 +36,14 @@ export const handleProxy: RequestHandler = async (req, res) => {
     }
 
     // req is a readable stream; pass through to fetch body to preserve multipart form data
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60_000);
     const upstream = await fetch(EXTERNAL, {
       method: "POST",
       headers: forwardHeaders,
       body: req as any,
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
 
     // Mirror status and headers
     const headers = new Headers(upstream.headers);
@@ -53,6 +56,8 @@ export const handleProxy: RequestHandler = async (req, res) => {
   } catch (err: any) {
     Object.entries(CORS_HEADERS).forEach(([k, v]) => res.setHeader(k, v));
     const message = err?.message || String(err);
-    return res.status(502).json({ error: "Proxy error", message });
+    return res
+      .status(502)
+      .json({ error: true, message: message || "Internal Server Error" });
   }
 };

@@ -1,10 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import AnimatedAIChat from "@/components/chat/AnimatedAIChat";
-import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { Copy, Download } from "lucide-react";
 
 type ApiResult = string;
 
@@ -145,16 +141,9 @@ export default function Index() {
         });
         return res;
       } catch (err: any) {
-        const msg = String(err?.message || "").toLowerCase();
-        if (
-          err?.name === "AbortError" ||
-          msg.includes("signal is aborted") ||
-          msg.includes("aborted") ||
-          msg.includes("failed to fetch")
-        ) {
-          return null;
-        }
-        throw err;
+        // Normalize all fetch errors (including AbortError) to null so callers can
+        // handle retries/fallbacks without uncaught exceptions.
+        return null;
       } finally {
         clearTimeout(t);
       }
@@ -168,17 +157,25 @@ export default function Index() {
       try {
         res = await sendTo("/api/proxy", settings.initialTimeoutMs);
       } catch (err: any) {
-        if (err?.name === "AbortError") {
-          toast({ title: "Slow connection", description: "Retrying..." });
-        } else {
-          throw err;
-        }
+        // Don't rethrow — treat as null so fallbacks run.
+        toast({
+          title: "Connection issue",
+          description: "Will try fallback endpoints.",
+        });
+        res = null;
       }
 
       // 2) Fallback to local express route if available
       if (!res || !res.ok) {
         await new Promise((r) => setTimeout(r, 200));
-        res = await sendTo("/api/generate-questions", settings.retryTimeoutMs);
+        try {
+          res = await sendTo(
+            "/api/generate-questions",
+            settings.retryTimeoutMs,
+          );
+        } catch (err: any) {
+          res = null;
+        }
       }
 
       // 3) If still bad or HTML, go direct external API (requires CORS on remote)
@@ -238,7 +235,7 @@ export default function Index() {
         <div className="absolute inset-0 bg-background -z-10" />
         <div className="relative mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl text-secondary drop-shadow-md">
-            Upload your PDF and generate exam-ready questions
+            Test Paper Generater
           </h1>
           <p className="mt-3 text-sm text-white/90">
             Fast, accurate question generation tailored to your query.
@@ -247,88 +244,6 @@ export default function Index() {
       </section>
 
       <section className="mx-auto mt-10 max-w-5xl space-y-6">
-        <div>
-          <div>
-            <div className="border-border bg-card/80 relative rounded-2xl border p-5 shadow-2xl backdrop-blur-2xl">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold">Response</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Results from your latest request
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    aria-label="Download"
-                    disabled={!result || loading}
-                    onClick={() => {
-                      if (!result) return;
-                      const blob = new Blob([result], {
-                        type: "text/plain;charset=utf-8",
-                      });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      const safeQuery =
-                        (query || "")
-                          .trim()
-                          .slice(0, 50)
-                          .replace(/[^a-z0-9_-]/gi, "_") || "questions";
-                      const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
-                      a.download = filename;
-                      document.body.appendChild(a);
-                      a.click();
-                      a.remove();
-                      setTimeout(() => URL.revokeObjectURL(url), 1000);
-                    }}
-                  >
-                    <Download />
-                    <span className="sr-only">Download</span>
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-4 max-h-[520px] overflow-auto rounded-md bg-background p-4 text-sm scrollbar-yellow">
-                {!result && !loading && (
-                  <p className="text-muted-foreground">
-                    No result yet. Submit to see the output.
-                  </p>
-                )}
-                {loading && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                        className="opacity-25"
-                      />
-                      <path
-                        d="M22 12a10 10 0 0 1-10 10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        className="opacity-75"
-                      />
-                    </svg>
-                    Generating...
-                  </div>
-                )}
-                {!!result && !loading && (
-                  <pre className="whitespace-pre-wrap break-words text-foreground">
-                    {result}
-                  </pre>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div className="space-y-4">
           {error && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
@@ -337,6 +252,9 @@ export default function Index() {
           )}
           <AnimatedAIChat
             loading={loading}
+            result={result}
+            query={query}
+            onReset={onReset}
             onSubmit={async ({ file: f, query: q }) => {
               if (f) setFile(f);
               setQuery(q);

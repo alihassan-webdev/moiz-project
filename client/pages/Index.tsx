@@ -152,9 +152,6 @@ export default function Index() {
           <h1 className="text-balance text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
             Upload a PDF and generate questions with your query
           </h1>
-          <p className="mt-4 text-lg/7 text-white/85">
-            API: https://api-va5v.onrender.com/generate-questions
-          </p>
         </div>
       </section>
 
@@ -209,14 +206,6 @@ export default function Index() {
             <Button type="submit" disabled={loading} className="min-w-32">
               {loading ? "Generating..." : "Generate"}
             </Button>
-            <a
-              href="https://api-va5v.onrender.com/generate-questions"
-              target="_blank"
-              rel="noreferrer"
-              className="text-sm text-muted-foreground hover:text-foreground"
-            >
-              View API endpoint
-            </a>
           </div>
         </form>
 

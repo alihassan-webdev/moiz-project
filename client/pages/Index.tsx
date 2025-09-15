@@ -124,7 +124,7 @@ export default function Index() {
       const t = setTimeout(() => controller.abort(new Error("timeout")), timeoutMs);
 
       try {
-        console.debug("Attempting fetch:", finalUrl, { isExternal });
+        console.debug("Attempting fetch ->", finalUrl, { isExternal });
         const res = await fetch(finalUrl, {
           method: "POST",
           body: form,
@@ -153,6 +153,23 @@ export default function Index() {
         return null;
       } finally {
         clearTimeout(t);
+      }
+    };
+
+    // Check whether a lightweight request to the given URL responds (used to test proxies)
+    const checkEndpoint = async (urlStr: string, timeoutMs = 3000) => {
+      try {
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), timeoutMs);
+        const res = await fetch(urlStr, {
+          method: "OPTIONS",
+          mode: "cors",
+          signal: controller.signal,
+        });
+        clearTimeout(t);
+        return res && (res.ok || res.status === 200 || res.status === 204);
+      } catch (err) {
+        return false;
       }
     };
 

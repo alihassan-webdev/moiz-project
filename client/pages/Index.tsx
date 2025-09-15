@@ -174,6 +174,15 @@ export default function Index() {
         res = null;
       }
 
+      // If direct request failed (CORS or network), try Netlify function proxy if available
+      if (!res) {
+        try {
+          const proxyPath = "/.netlify/functions/proxy";
+          res = await sendTo(proxyPath, settings.retryTimeoutMs);
+        } catch (err) {
+          res = null;
+        }
+      }
 
       if (!res) {
         throw new Error("Request timed out or was aborted");

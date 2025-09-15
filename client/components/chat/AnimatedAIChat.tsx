@@ -129,14 +129,7 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
   ];
 
   useEffect(() => {
-    if (value.startsWith("/") && !value.includes(" ")) {
-      setShowCommandPalette(true);
-      const matchingSuggestionIndex = commandSuggestions.findIndex((cmd) => cmd.prefix.startsWith(value));
-      if (matchingSuggestionIndex >= 0) setActiveSuggestion(matchingSuggestionIndex);
-      else setActiveSuggestion(-1);
-    } else {
-      setShowCommandPalette(false);
-    }
+    setShowCommandPalette(false);
   }, [value]);
 
   useEffect(() => {

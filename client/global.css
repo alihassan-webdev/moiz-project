@@ -135,6 +135,26 @@
   filter: brightness(0.92);
 }
 
+/* Black input utility to keep inputs black on focus and autofill */
+.input-black {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+.input-black::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+.input-black:focus,
+.input-black:active {
+  background-color: #000 !important;
+}
+.input-black:-webkit-autofill,
+.input-black:-webkit-autofill:hover,
+.input-black:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  box-shadow: 0 0 0px 1000px #000 inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
 /* Hide global scrollbars but keep scrolling */
 @layer base {
   html,

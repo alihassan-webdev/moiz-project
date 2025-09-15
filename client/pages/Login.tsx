@@ -50,7 +50,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
-              className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
+              className="input-black bg-black text-white placeholder:text-white/60 focus:bg-black focus-visible:bg-black focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
             />
           </div>
           <div className="grid gap-2">
@@ -62,7 +62,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
-              className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
+              className="input-black bg-black text-white placeholder:text-white/60 focus:bg-black focus-visible:bg-black focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
             />
           </div>
           <Button type="submit" className="w-full" variant="secondary" disabled={loading}>

@@ -110,3 +110,16 @@
     border-radius: var(--radius);
   }
 }
+
+/* Hide global scrollbars but keep scrolling */
+@layer base {
+  html, body {
+    -ms-overflow-style: none; /* IE and old Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+}

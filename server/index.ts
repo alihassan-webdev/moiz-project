@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
 import { handleGenerate, uploadPdf } from "./routes/generate";
+import { handleProxy } from "./routes/proxy";
 
 export function createServer() {
   const app = express();
@@ -22,6 +23,10 @@ export function createServer() {
 
   // Proxy to external PDF question generation API
   app.post("/api/generate-questions", uploadPdf, handleGenerate);
+
+  // Universal proxy endpoint (CORS + POST forward). Register both paths for serverless base path quirks
+  app.all("/api/proxy", handleProxy);
+  app.all("/proxy", handleProxy);
 
   return app;
 }

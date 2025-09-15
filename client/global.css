@@ -113,6 +113,28 @@
   }
 }
 
+/* Yellow scrollbar utility for scrollable areas (matches theme secondary color) */
+.scrollbar-yellow {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: hsl(var(--secondary)) transparent; /* Firefox */
+}
+.scrollbar-yellow::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scrollbar-yellow::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-yellow::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--secondary));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.scrollbar-yellow::-webkit-scrollbar-thumb:hover {
+  filter: brightness(0.92);
+}
+
 /* Hide global scrollbars but keep scrolling */
 @layer base {
   html,

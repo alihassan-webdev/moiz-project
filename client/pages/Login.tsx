@@ -6,9 +6,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { login } from "@/lib/auth";
 
-const DEMO_EMAIL = "demo@demo.com" as const;
-const DEMO_PASSWORD = "demo123" as const;
-
 export default function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -28,13 +25,9 @@ export default function Login() {
 
     setLoading(true);
     try {
-      if (em.toLowerCase() === DEMO_EMAIL && pw === DEMO_PASSWORD) {
-        login(em);
-        toast({ title: "Welcome", description: "Login successful." });
-        navigate("/", { replace: true });
-      } else {
-        toast({ title: "Invalid credentials", description: "Use demo@demo.com with password demo123." });
-      }
+      login(em);
+      toast({ title: "Welcome", description: "Logged in (demo)." });
+      navigate("/", { replace: true });
     } finally {
       setLoading(false);
     }
@@ -45,7 +38,7 @@ export default function Login() {
       <div className="w-full max-w-lg rounded-xl border bg-card p-8 sm:p-10 card-surface">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-secondary">Log in</h1>
-          <p className="text-sm text-muted-foreground">Demo access only. Use demo@demo.com / demo123</p>
+          <p className="text-sm text-muted-foreground">Demo login: enter any email and password</p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid gap-2">

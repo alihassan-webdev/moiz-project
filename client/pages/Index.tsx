@@ -287,7 +287,7 @@ export default function Index() {
             <Button type="submit" disabled={loading} variant="secondary" className="min-w-32">
               {loading ? "Generating..." : "Generate"}
             </Button>
-            <Button type="button" onClick={onReset} className="bg-black text-white border border-yellow-400 hover:bg-black/90">
+            <Button type="button" variant="outline" onClick={onReset} className="bg-black text-white border-yellow-400 hover:bg-black/90">
               Reset
             </Button>
           </div>

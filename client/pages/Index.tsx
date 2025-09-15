@@ -141,16 +141,9 @@ export default function Index() {
         });
         return res;
       } catch (err: any) {
-        const msg = String(err?.message || "").toLowerCase();
-        if (
-          err?.name === "AbortError" ||
-          msg.includes("signal is aborted") ||
-          msg.includes("aborted") ||
-          msg.includes("failed to fetch")
-        ) {
-          return null;
-        }
-        throw err;
+        // Normalize all fetch errors (including AbortError) to null so callers can
+        // handle retries/fallbacks without uncaught exceptions.
+        return null;
       } finally {
         clearTimeout(t);
       }

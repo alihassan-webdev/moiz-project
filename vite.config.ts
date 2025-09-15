@@ -1,7 +1,6 @@
 import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { createServer } from "./server";
 
 // HMR configuration can be driven by environment variables so preview/proxy
 // environments can override protocol/host/port when necessary.

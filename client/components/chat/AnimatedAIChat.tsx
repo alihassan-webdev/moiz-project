@@ -282,7 +282,7 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
                   onKeyDown={handleKeyDown}
                   onFocus={() => setInputFocused(true)}
                   onBlur={() => setInputFocused(false)}
-                  placeholder="Ask mvp.ai a question..."
+                  placeholder="Generate question paper..."
                   containerClassName="w-full"
                   className={cn("w-full px-4 py-3", "resize-none", "bg-transparent", "border-none", "text-foreground text-sm", "focus:outline-none", "placeholder:text-muted-foreground", "min-h-[60px]")}
                   style={{ overflow: "hidden" }}

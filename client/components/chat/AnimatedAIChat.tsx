@@ -3,7 +3,7 @@
 import { useEffect, useRef, useCallback, useTransition } from "react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ImageIcon, Figma, MonitorIcon, Paperclip, SendIcon, XIcon, LoaderIcon, Sparkles, Command } from "lucide-react";
+import { ImageIcon, Figma, MonitorIcon, Paperclip, SendIcon, XIcon, LoaderIcon, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as React from "react";
 import { toast } from "@/hooks/use-toast";

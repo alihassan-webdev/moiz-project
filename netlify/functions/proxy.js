@@ -5,7 +5,7 @@ exports.handler = async function (event, context) {
   const url = new URL(EXTERNAL);
   if (event.queryStringParameters) {
     for (const [k, v] of Object.entries(event.queryStringParameters)) {
-      if (v != null) url.searchParams.set(k, v as string);
+      if (v != null) url.searchParams.set(k, String(v));
     }
   }
 

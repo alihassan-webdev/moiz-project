@@ -32,19 +32,23 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     const form = new FormData();
     const uint8 = new Uint8Array(file.buffer);
     const blob = new Blob([uint8], { type: file.mimetype || "application/pdf" });
-    // Append with both common field names to maximize compatibility
+    // Append only once to avoid duplicating payload size
     form.append("pdf", blob, file.originalname || "document.pdf");
-    form.append("file", blob, file.originalname || "document.pdf");
     if (query) form.append("query", query);
 
     // Also support query as URL search param for target API if they expect it there
     const url = new URL(EXTERNAL_API);
     if (query) url.searchParams.set("query", query);
 
+    // Abort if upstream is too slow to respond
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30_000);
+
     const upstream = await fetch(url, {
       method: "POST",
       body: form,
-    });
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeout));
 
     const contentType = upstream.headers.get("content-type") || "";
 
@@ -62,6 +66,9 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     const text = await upstream.text();
     return res.status(200).json({ result: text });
   } catch (err: any) {
+    if (err?.name === "AbortError") {
+      return res.status(504).json({ error: "Upstream timeout" });
+    }
     return res.status(500).json({ error: "Internal server error", detail: err?.message || String(err) });
   }
 };

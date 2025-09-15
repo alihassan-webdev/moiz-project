@@ -306,8 +306,8 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
                 <div className="flex items-center gap-3">
                   <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
-                  <motion.button type="button" onClick={handleAttachFile} whileTap={{ scale: 0.94 }} className="group text-muted-foreground hover:text-foreground relative rounded-lg p-2 transition-colors">
-                    <Paperclip className="h-4 w-4" />
+                  <motion.button type="button" onClick={handleAttachFile} whileTap={{ scale: 0.94 }} className="group text-secondary relative rounded-lg p-2 transition-colors">
+                    <Paperclip className="h-4 w-4 text-secondary" />
                     <motion.span className="bg-primary/10 absolute inset-0 rounded-lg opacity-0 transition-opacity group-hover:opacity-100" layoutId="button-highlight" />
                   </motion.button>
                   <motion.button

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,10 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
+// Direct API endpoint used when serverless functions are unavailable (static deploys)
+const DIRECT_API_URL =
+  "https://api-va5v.onrender.com/generate-questions" as const;
+
 export default function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [query, setQuery] = useState("");
@@ -31,6 +35,7 @@ export default function Index() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ApiResult | null>(null);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     try {
@@ -76,6 +81,15 @@ export default function Index() {
     setFile(f);
   };
 
+  const onReset = () => {
+    setFile(null);
+    setQuery("");
+    setError(null);
+    setResult(null);
+    const el = fileInputRef.current;
+    if (el) el.value = "";
+  };
+
   const runSubmit = async () => {
     setError(null);
     setResult(null);
@@ -91,28 +105,54 @@ export default function Index() {
       return;
     }
 
-    const send = async (timeoutMs: number) => {
+    const sendTo = async (urlStr: string, timeoutMs: number) => {
+      const isExternal = /^https?:/i.test(urlStr);
+
+      const form = new FormData();
+      form.append("pdf", file);
+      form.append("query", q);
+      // External APIs may expect the field name "file"; include both for compatibility
+      if (isExternal) {
+        form.append("file", file);
+      }
+
+      let finalUrl = urlStr;
+      if (isExternal && q) {
+        const u = new URL(urlStr);
+        u.searchParams.set("query", q);
+        finalUrl = u.toString();
+      }
+
       const controller = new AbortController();
       const t = setTimeout(() => controller.abort(), timeoutMs);
+
       try {
-        const form = new FormData();
-        form.append("pdf", file);
-        form.append("query", q);
-        try {
-          const res = await fetch("/api/generate-questions", {
-            method: "POST",
-            body: form,
-            signal: controller.signal,
-            headers: { Accept: "application/json" },
-          });
-          return res;
-        } catch (err: any) {
-          // Normalize AbortError to a null response so callers can handle retries
-          if (err?.name === "AbortError") {
-            return null;
-          }
-          throw err;
+        const res = await fetch(finalUrl, {
+          method: "POST",
+          body: form,
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+          // CORS-friendly defaults for external endpoints
+          ...(isExternal
+            ? {
+                mode: "cors" as const,
+                credentials: "omit" as const,
+                referrerPolicy: "no-referrer" as const,
+              }
+            : {}),
+        });
+        return res;
+      } catch (err: any) {
+        const msg = String(err?.message || "").toLowerCase();
+        if (
+          err?.name === "AbortError" ||
+          msg.includes("signal is aborted") ||
+          msg.includes("aborted") ||
+          msg.includes("failed to fetch")
+        ) {
+          return null;
         }
+        throw err;
       } finally {
         clearTimeout(t);
       }
@@ -122,8 +162,9 @@ export default function Index() {
       setLoading(true);
       let res: Response | null = null;
 
+      // 1) Prefer universal proxy endpoint (works on Express, Vercel, Netlify)
       try {
-        res = await send(settings.initialTimeoutMs);
+        res = await sendTo("/api/proxy", settings.initialTimeoutMs);
       } catch (err: any) {
         if (err?.name === "AbortError") {
           toast({ title: "Slow connection", description: "Retrying..." });
@@ -132,12 +173,23 @@ export default function Index() {
         }
       }
 
-      if ((!res || !res.ok || res.status === 504) && settings.autoRetry) {
-        await new Promise((r) => setTimeout(r, 800));
-        res = await send(settings.retryTimeoutMs);
+      // 2) Fallback to local express route if available
+      if (!res || !res.ok) {
+        await new Promise((r) => setTimeout(r, 200));
+        res = await sendTo("/api/generate-questions", settings.retryTimeoutMs);
       }
 
-      // If send returned null (e.g. aborted), normalize to an error to be handled below
+      // 3) If still bad or HTML, go direct external API (requires CORS on remote)
+      const isBad =
+        !res ||
+        !res.ok ||
+        res.status === 404 ||
+        (res.headers?.get("content-type") || "").includes("text/html");
+      if (isBad) {
+        await new Promise((r) => setTimeout(r, 200));
+        res = await sendTo(DIRECT_API_URL, settings.retryTimeoutMs);
+      }
+
       if (!res) {
         throw new Error("Request timed out or was aborted");
       }
@@ -152,7 +204,10 @@ export default function Index() {
         const text =
           typeof json === "string"
             ? json
-            : (json?.questions ?? json?.result ?? json?.message ?? JSON.stringify(json, null, 2));
+            : (json?.questions ??
+              json?.result ??
+              json?.message ??
+              JSON.stringify(json, null, 2));
         setResult(String(text));
       } else {
         const text = await res.text();
@@ -178,12 +233,14 @@ export default function Index() {
   return (
     <div>
       <section className="relative overflow-hidden rounded-2xl px-6 py-16 text-white">
-        <div className="absolute inset-0 bg-gradient-to-tr from-primary/90 via-accent/40 to-secondary/80 blur-2xl opacity-95 -z-10" />
+        <div className="absolute inset-0 bg-background -z-10" />
         <div className="relative mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl text-secondary drop-shadow-md">
             Upload a PDF and generate premium-quality questions
           </h1>
-          <p className="mt-3 text-sm text-white/90">Fast, accurate question generation tailored to your query.</p>
+          <p className="mt-3 text-sm text-white/90">
+            Fast, accurate question generation tailored to your query.
+          </p>
         </div>
       </section>
 
@@ -195,10 +252,13 @@ export default function Index() {
               onDragOver={(e) => e.preventDefault()}
               className={cn(
                 "group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl p-8 text-center transition-colors card-surface",
-                file ? "ring-2 ring-secondary/70" : "border-2 border-dashed border-secondary/40 hover:ring-2 hover:ring-secondary/60",
+                file
+                  ? "ring-2 ring-secondary/70"
+                  : "border-2 border-dashed border-secondary/40 hover:ring-2 hover:ring-secondary/60",
               )}
             >
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="application/pdf"
                 className="hidden"
@@ -250,8 +310,21 @@ export default function Index() {
           )}
 
           <div className="flex items-center gap-3">
-            <Button type="submit" disabled={loading} variant="secondary" className="min-w-32">
+            <Button
+              type="submit"
+              disabled={loading}
+              variant="secondary"
+              className="min-w-32"
+            >
               {loading ? "Generating..." : "Generate"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onReset}
+              className="bg-black text-white border-yellow-400 hover:bg-black/90"
+            >
+              Reset
             </Button>
           </div>
         </form>
@@ -262,7 +335,9 @@ export default function Index() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">Response</h3>
-                  <p className="text-sm text-muted-foreground">Results from your latest request</p>
+                  <p className="text-sm text-muted-foreground">
+                    Results from your latest request
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -273,11 +348,17 @@ export default function Index() {
                     disabled={!result || loading}
                     onClick={() => {
                       if (!result) return;
-                      const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+                      const blob = new Blob([result], {
+                        type: "text/plain;charset=utf-8",
+                      });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement("a");
                       a.href = url;
-                      const safeQuery = (query || "").trim().slice(0, 50).replace(/[^a-z0-9_-]/gi, "_") || "questions";
+                      const safeQuery =
+                        (query || "")
+                          .trim()
+                          .slice(0, 50)
+                          .replace(/[^a-z0-9_-]/gi, "_") || "questions";
                       const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
                       a.download = filename;
                       document.body.appendChild(a);
@@ -295,19 +376,36 @@ export default function Index() {
 
               <div className="mt-4 max-h-[420px] overflow-auto rounded-md bg-background p-4 text-sm">
                 {!result && !loading && (
-                  <p className="text-muted-foreground">No result yet. Submit the form to see the output.</p>
+                  <p className="text-muted-foreground">
+                    No result yet. Submit the form to see the output.
+                  </p>
                 )}
                 {loading && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
-                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" className="opacity-75" />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                        className="opacity-25"
+                      />
+                      <path
+                        d="M22 12a10 10 0 0 1-10 10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        className="opacity-75"
+                      />
                     </svg>
                     Generating...
                   </div>
                 )}
                 {!!result && !loading && (
-                  <pre className="whitespace-pre-wrap break-words text-foreground">{result}</pre>
+                  <pre className="whitespace-pre-wrap break-words text-foreground">
+                    {result}
+                  </pre>
                 )}
               </div>
             </div>

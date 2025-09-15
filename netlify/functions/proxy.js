@@ -10,13 +10,23 @@ export async function handler(event) {
     return { statusCode: 200, headers: CORS, body: "" };
   }
   if (event.httpMethod !== "POST") {
-    return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: "Method Not Allowed" }) };
+    return {
+      statusCode: 405,
+      headers: CORS,
+      body: JSON.stringify({ error: "Method Not Allowed" }),
+    };
   }
 
   try {
     const headers = { ...event.headers };
-    delete headers.host; delete headers.connection; delete headers["content-length"]; delete headers["accept-encoding"]; 
-    const body = event.isBase64Encoded && event.body ? Buffer.from(event.body, "base64") : event.body;
+    delete headers.host;
+    delete headers.connection;
+    delete headers["content-length"];
+    delete headers["accept-encoding"];
+    const body =
+      event.isBase64Encoded && event.body
+        ? Buffer.from(event.body, "base64")
+        : event.body;
 
     const resp = await fetch(EXTERNAL, { method: "POST", headers, body });
     const respBuf = Buffer.from(await resp.arrayBuffer());
@@ -28,6 +38,13 @@ export async function handler(event) {
       isBase64Encoded: true,
     };
   } catch (err) {
-    return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: "Proxy error", message: String(err && err.message || err) }) };
+    return {
+      statusCode: 502,
+      headers: CORS,
+      body: JSON.stringify({
+        error: "Proxy error",
+        message: String((err && err.message) || err),
+      }),
+    };
   }
 }

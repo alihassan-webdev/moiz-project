@@ -25,7 +25,8 @@ const DEFAULT_SETTINGS: AppSettings = {
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
 // Direct API endpoint used when serverless functions are unavailable (static deploys)
-const DIRECT_API_URL = "https://api-va5v.onrender.com/generate-questions" as const;
+const DIRECT_API_URL =
+  "https://api-va5v.onrender.com/generate-questions" as const;
 
 export default function Index() {
   const [file, setFile] = useState<File | null>(null);
@@ -132,12 +133,23 @@ export default function Index() {
           signal: controller.signal,
           headers: { Accept: "application/json" },
           // CORS-friendly defaults for external endpoints
-          ...(isExternal ? { mode: "cors" as const, credentials: "omit" as const, referrerPolicy: "no-referrer" as const } : {}),
+          ...(isExternal
+            ? {
+                mode: "cors" as const,
+                credentials: "omit" as const,
+                referrerPolicy: "no-referrer" as const,
+              }
+            : {}),
         });
         return res;
       } catch (err: any) {
         const msg = String(err?.message || "").toLowerCase();
-        if (err?.name === "AbortError" || msg.includes("signal is aborted") || msg.includes("aborted") || msg.includes("failed to fetch")) {
+        if (
+          err?.name === "AbortError" ||
+          msg.includes("signal is aborted") ||
+          msg.includes("aborted") ||
+          msg.includes("failed to fetch")
+        ) {
           return null;
         }
         throw err;
@@ -168,7 +180,11 @@ export default function Index() {
       }
 
       // 3) If still bad or HTML, go direct external API (requires CORS on remote)
-      const isBad = !res || !res.ok || res.status === 404 || (res.headers?.get("content-type") || "").includes("text/html");
+      const isBad =
+        !res ||
+        !res.ok ||
+        res.status === 404 ||
+        (res.headers?.get("content-type") || "").includes("text/html");
       if (isBad) {
         await new Promise((r) => setTimeout(r, 200));
         res = await sendTo(DIRECT_API_URL, settings.retryTimeoutMs);
@@ -188,7 +204,10 @@ export default function Index() {
         const text =
           typeof json === "string"
             ? json
-            : (json?.questions ?? json?.result ?? json?.message ?? JSON.stringify(json, null, 2));
+            : (json?.questions ??
+              json?.result ??
+              json?.message ??
+              JSON.stringify(json, null, 2));
         setResult(String(text));
       } else {
         const text = await res.text();
@@ -219,7 +238,9 @@ export default function Index() {
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl text-secondary drop-shadow-md">
             Upload a PDF and generate premium-quality questions
           </h1>
-          <p className="mt-3 text-sm text-white/90">Fast, accurate question generation tailored to your query.</p>
+          <p className="mt-3 text-sm text-white/90">
+            Fast, accurate question generation tailored to your query.
+          </p>
         </div>
       </section>
 
@@ -231,7 +252,9 @@ export default function Index() {
               onDragOver={(e) => e.preventDefault()}
               className={cn(
                 "group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl p-8 text-center transition-colors card-surface",
-                file ? "ring-2 ring-secondary/70" : "border-2 border-dashed border-secondary/40 hover:ring-2 hover:ring-secondary/60",
+                file
+                  ? "ring-2 ring-secondary/70"
+                  : "border-2 border-dashed border-secondary/40 hover:ring-2 hover:ring-secondary/60",
               )}
             >
               <input
@@ -287,10 +310,20 @@ export default function Index() {
           )}
 
           <div className="flex items-center gap-3">
-            <Button type="submit" disabled={loading} variant="secondary" className="min-w-32">
+            <Button
+              type="submit"
+              disabled={loading}
+              variant="secondary"
+              className="min-w-32"
+            >
               {loading ? "Generating..." : "Generate"}
             </Button>
-            <Button type="button" variant="outline" onClick={onReset} className="bg-black text-white border-yellow-400 hover:bg-black/90">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onReset}
+              className="bg-black text-white border-yellow-400 hover:bg-black/90"
+            >
               Reset
             </Button>
           </div>
@@ -302,7 +335,9 @@ export default function Index() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">Response</h3>
-                  <p className="text-sm text-muted-foreground">Results from your latest request</p>
+                  <p className="text-sm text-muted-foreground">
+                    Results from your latest request
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -313,11 +348,17 @@ export default function Index() {
                     disabled={!result || loading}
                     onClick={() => {
                       if (!result) return;
-                      const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+                      const blob = new Blob([result], {
+                        type: "text/plain;charset=utf-8",
+                      });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement("a");
                       a.href = url;
-                      const safeQuery = (query || "").trim().slice(0, 50).replace(/[^a-z0-9_-]/gi, "_") || "questions";
+                      const safeQuery =
+                        (query || "")
+                          .trim()
+                          .slice(0, 50)
+                          .replace(/[^a-z0-9_-]/gi, "_") || "questions";
                       const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
                       a.download = filename;
                       document.body.appendChild(a);
@@ -335,19 +376,36 @@ export default function Index() {
 
               <div className="mt-4 max-h-[420px] overflow-auto rounded-md bg-background p-4 text-sm">
                 {!result && !loading && (
-                  <p className="text-muted-foreground">No result yet. Submit the form to see the output.</p>
+                  <p className="text-muted-foreground">
+                    No result yet. Submit the form to see the output.
+                  </p>
                 )}
                 {loading && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
-                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" className="opacity-75" />
+                      <circle
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        fill="none"
+                        className="opacity-25"
+                      />
+                      <path
+                        d="M22 12a10 10 0 0 1-10 10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                        className="opacity-75"
+                      />
                     </svg>
                     Generating...
                   </div>
                 )}
                 {!!result && !loading && (
-                  <pre className="whitespace-pre-wrap break-words text-foreground">{result}</pre>
+                  <pre className="whitespace-pre-wrap break-words text-foreground">
+                    {result}
+                  </pre>
                 )}
               </div>
             </div>

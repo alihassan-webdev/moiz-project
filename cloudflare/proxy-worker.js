@@ -11,12 +11,18 @@ export default {
       return new Response(null, { status: 200, headers: CORS });
     }
     if (request.method !== "POST") {
-      return new Response(JSON.stringify({ error: "Method Not Allowed" }), { status: 405, headers: CORS });
+      return new Response(JSON.stringify({ error: "Method Not Allowed" }), {
+        status: 405,
+        headers: CORS,
+      });
     }
 
     try {
       const headers = new Headers(request.headers);
-      headers.delete("host"); headers.delete("content-length"); headers.delete("connection"); headers.delete("accept-encoding");
+      headers.delete("host");
+      headers.delete("content-length");
+      headers.delete("connection");
+      headers.delete("accept-encoding");
 
       const upstream = await fetch(EXTERNAL, {
         method: "POST",
@@ -26,9 +32,18 @@ export default {
 
       const respHeaders = new Headers(upstream.headers);
       respHeaders.set("Access-Control-Allow-Origin", "*");
-      return new Response(upstream.body, { status: upstream.status, headers: respHeaders });
+      return new Response(upstream.body, {
+        status: upstream.status,
+        headers: respHeaders,
+      });
     } catch (err) {
-      return new Response(JSON.stringify({ error: "Proxy error", message: String(err && err.message || err) }), { status: 502, headers: CORS });
+      return new Response(
+        JSON.stringify({
+          error: "Proxy error",
+          message: String((err && err.message) || err),
+        }),
+        { status: 502, headers: CORS },
+      );
     }
-  }
+  },
 };

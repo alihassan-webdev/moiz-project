@@ -25,7 +25,13 @@ export const handleProxy: RequestHandler = async (req, res) => {
     for (const [k, v] of Object.entries(req.headers)) {
       if (!v) continue;
       const key = k.toLowerCase();
-      if (key === "host" || key === "content-length" || key === "connection" || key === "accept-encoding") continue;
+      if (
+        key === "host" ||
+        key === "content-length" ||
+        key === "connection" ||
+        key === "accept-encoding"
+      )
+        continue;
       forwardHeaders[key] = Array.isArray(v) ? v.join(", ") : String(v);
     }
 

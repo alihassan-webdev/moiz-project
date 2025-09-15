@@ -19,7 +19,13 @@ export default async function handler(req, res) {
     const fwdHeaders = {};
     for (const [k, v] of Object.entries(req.headers)) {
       const key = k.toLowerCase();
-      if (key === "host" || key === "content-length" || key === "connection" || key === "accept-encoding") continue;
+      if (
+        key === "host" ||
+        key === "content-length" ||
+        key === "connection" ||
+        key === "accept-encoding"
+      )
+        continue;
       fwdHeaders[key] = Array.isArray(v) ? v.join(", ") : String(v);
     }
 
@@ -35,6 +41,11 @@ export default async function handler(req, res) {
     return res.status(upstream.status).send(buf);
   } catch (err) {
     for (const [k, v] of Object.entries(CORS)) res.setHeader(k, v);
-    return res.status(502).json({ error: "Proxy error", message: String(err && err.message || err) });
+    return res
+      .status(502)
+      .json({
+        error: "Proxy error",
+        message: String((err && err.message) || err),
+      });
   }
 }

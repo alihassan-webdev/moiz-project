@@ -6,8 +6,13 @@ import { createServer } from "./server";
 // HMR configuration can be driven by environment variables so preview/proxy
 // environments can override protocol/host/port when necessary.
 const HMR = {
-  protocol: process.env.HMR_PROTOCOL || process.env.VITE_HMR_PROTOCOL || undefined,
-  host: process.env.HMR_HOST || process.env.VITE_HMR_HOST || process.env.HOST || undefined,
+  protocol:
+    process.env.HMR_PROTOCOL || process.env.VITE_HMR_PROTOCOL || undefined,
+  host:
+    process.env.HMR_HOST ||
+    process.env.VITE_HMR_HOST ||
+    process.env.HOST ||
+    undefined,
   port: process.env.HMR_PORT ? Number(process.env.HMR_PORT) : undefined,
 };
 
@@ -23,13 +28,7 @@ export default defineConfig(({ mode }) => ({
         path.resolve(__dirname, "client"),
         path.resolve(__dirname, "shared"),
       ],
-      deny: [
-        ".env",
-        ".env.*",
-        "*.{crt,pem}",
-        "**/.git/**",
-        "server/**",
-      ],
+      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
     },
   },
   build: {

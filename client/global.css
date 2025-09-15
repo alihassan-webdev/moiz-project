@@ -106,14 +106,17 @@
 
   /* Premium surface shadows */
   .card-surface {
-    box-shadow: 0 6px 18px rgba(16,24,40,0.08), 0 2px 6px rgba(16,24,40,0.06);
+    box-shadow:
+      0 6px 18px rgba(16, 24, 40, 0.08),
+      0 2px 6px rgba(16, 24, 40, 0.06);
     border-radius: var(--radius);
   }
 }
 
 /* Hide global scrollbars but keep scrolling */
 @layer base {
-  html, body {
+  html,
+  body {
     -ms-overflow-style: none; /* IE and old Edge */
     scrollbar-width: none; /* Firefox */
   }

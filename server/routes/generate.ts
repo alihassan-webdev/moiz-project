@@ -1,5 +1,6 @@
 import type { RequestHandler } from "express";
 import multer from "multer";
+import { createHash } from "node:crypto";
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -9,6 +10,9 @@ const upload = multer({
 });
 
 const EXTERNAL_API = "https://api-va5v.onrender.com/generate-questions" as const;
+
+const CACHE_TTL_MS = 5 * 60_000;
+const cache = new Map<string, { ts: number; json?: any; text?: string }>();
 
 // Middleware stack: multer first to parse multipart with single PDF file named "pdf" (we also accept "file")
 export const uploadPdf = upload.fields([
@@ -29,6 +33,14 @@ export const handleGenerate: RequestHandler = async (req, res) => {
 
     const query = (body?.query ?? body?.q ?? "").toString();
 
+    const key = createHash("sha256").update(file.buffer).update("|").update(query).digest("hex");
+    const cached = cache.get(key);
+    if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
+      if (cached.json !== undefined) {
+        return res.status(200).json(cached.json);
+      }
+      return res.status(200).json({ result: cached.text ?? "" });
+    }
     const form = new FormData();
     const uint8 = new Uint8Array(file.buffer);
     const blob = new Blob([uint8], { type: file.mimetype || "application/pdf" });
@@ -59,11 +71,13 @@ export const handleGenerate: RequestHandler = async (req, res) => {
 
     if (contentType.includes("application/json")) {
       const json = await upstream.json();
+      cache.set(key, { ts: Date.now(), json });
       return res.status(200).json(json);
     }
 
     // Fallback: return text result under a consistent shape
     const text = await upstream.text();
+    cache.set(key, { ts: Date.now(), text });
     return res.status(200).json({ result: text });
   } catch (err: any) {
     if (err?.name === "AbortError") {

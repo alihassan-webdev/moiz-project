@@ -3,13 +3,25 @@
 import { useEffect, useRef, useCallback, useTransition } from "react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { ImageIcon, Figma, MonitorIcon, Paperclip, SendIcon, XIcon, LoaderIcon, Sparkles } from "lucide-react";
+import {
+  ImageIcon,
+  Figma,
+  MonitorIcon,
+  Paperclip,
+  SendIcon,
+  XIcon,
+  LoaderIcon,
+  Sparkles,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import * as React from "react";
 import { toast } from "@/hooks/use-toast";
 
 type Props = {
-  onSubmit: (args: { file: File | null; query: string }) => Promise<void> | void;
+  onSubmit: (args: {
+    file: File | null;
+    query: string;
+  }) => Promise<void> | void;
   loading?: boolean;
 };
 
@@ -20,7 +32,10 @@ interface UseAutoResizeTextareaProps {
   maxHeight?: number;
 }
 
-function useAutoResizeTextarea({ minHeight, maxHeight }: UseAutoResizeTextareaProps) {
+function useAutoResizeTextarea({
+  minHeight,
+  maxHeight,
+}: UseAutoResizeTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const adjustHeight = useCallback(
@@ -34,7 +49,10 @@ function useAutoResizeTextarea({ minHeight, maxHeight }: UseAutoResizeTextareaPr
       }
 
       textarea.style.height = `${minHeight}px`;
-      const newHeight = Math.max(minHeight, Math.min(textarea.scrollHeight, maxHeight ?? Number.POSITIVE_INFINITY));
+      const newHeight = Math.max(
+        minHeight,
+        Math.min(textarea.scrollHeight, maxHeight ?? Number.POSITIVE_INFINITY),
+      );
 
       textarea.style.height = `${newHeight}px`;
     },
@@ -64,47 +82,56 @@ interface CommandSuggestion {
   prefix: string;
 }
 
-interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+interface TextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
   containerClassName?: string;
   showRing?: boolean;
 }
 
-const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(({ className, containerClassName, showRing = true, ...props }, ref) => {
-  const [isFocused, setIsFocused] = React.useState(false);
+const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  ({ className, containerClassName, showRing = true, ...props }, ref) => {
+    const [isFocused, setIsFocused] = React.useState(false);
 
-  return (
-    <div className={cn("relative", containerClassName)}>
-      <textarea
-        className={cn(
-          "border-input bg-background flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm",
-          "transition-all duration-200 ease-in-out",
-          "placeholder:text-muted-foreground",
-          "disabled:cursor-not-allowed disabled:opacity-50",
-          showRing ? "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none" : "",
-          className,
-        )}
-        ref={ref}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        {...props}
-      />
-
-      {showRing && isFocused && (
-        <motion.span
-          className="ring-primary/30 pointer-events-none absolute inset-0 rounded-md ring-2 ring-offset-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+    return (
+      <div className={cn("relative", containerClassName)}>
+        <textarea
+          className={cn(
+            "border-input bg-background flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm",
+            "transition-all duration-200 ease-in-out",
+            "placeholder:text-muted-foreground",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            showRing
+              ? "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
+              : "",
+            className,
+          )}
+          ref={ref}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          {...props}
         />
-      )}
 
-      {props.onChange && (
-        <div className="bg-primary absolute right-2 bottom-2 h-2 w-2 rounded-full opacity-0" style={{ animation: "none" }} id="textarea-ripple" />
-      )}
-    </div>
-  );
-});
+        {showRing && isFocused && (
+          <motion.span
+            className="ring-primary/30 pointer-events-none absolute inset-0 rounded-md ring-2 ring-offset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          />
+        )}
+
+        {props.onChange && (
+          <div
+            className="bg-primary absolute right-2 bottom-2 h-2 w-2 rounded-full opacity-0"
+            style={{ animation: "none" }}
+            id="textarea-ripple"
+          />
+        )}
+      </div>
+    );
+  },
+);
 InnerTextarea.displayName = "Textarea";
 
 export default function AnimatedAIChat({ onSubmit, loading }: Props) {
@@ -116,16 +143,39 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
   const [showCommandPalette, setShowCommandPalette] = useState(false);
   const [recentCommand, setRecentCommand] = useState<string | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 60, maxHeight: 200 });
+  const { textareaRef, adjustHeight } = useAutoResizeTextarea({
+    minHeight: 60,
+    maxHeight: 200,
+  });
   const [inputFocused, setInputFocused] = useState(false);
   const commandPaletteRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const commandSuggestions: CommandSuggestion[] = [
-    { icon: <ImageIcon className="h-4 w-4" />, label: "Clone UI", description: "Generate a UI from a screenshot", prefix: "/clone" },
-    { icon: <Figma className="h-4 w-4" />, label: "Import Figma", description: "Import a design from Figma", prefix: "/figma" },
-    { icon: <MonitorIcon className="h-4 w-4" />, label: "Create Page", description: "Generate a new web page", prefix: "/page" },
-    { icon: <Sparkles className="h-4 w-4" />, label: "Improve", description: "Improve existing UI design", prefix: "/improve" },
+    {
+      icon: <ImageIcon className="h-4 w-4" />,
+      label: "Clone UI",
+      description: "Generate a UI from a screenshot",
+      prefix: "/clone",
+    },
+    {
+      icon: <Figma className="h-4 w-4" />,
+      label: "Import Figma",
+      description: "Import a design from Figma",
+      prefix: "/figma",
+    },
+    {
+      icon: <MonitorIcon className="h-4 w-4" />,
+      label: "Create Page",
+      description: "Generate a new web page",
+      prefix: "/page",
+    },
+    {
+      icon: <Sparkles className="h-4 w-4" />,
+      label: "Improve",
+      description: "Improve existing UI design",
+      prefix: "/improve",
+    },
   ];
 
   useEffect(() => {
@@ -133,7 +183,8 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
   }, [value]);
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => setMousePosition({ x: e.clientX, y: e.clientY });
+    const handleMouseMove = (e: MouseEvent) =>
+      setMousePosition({ x: e.clientX, y: e.clientY });
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
@@ -141,8 +192,12 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      const commandButton = document.querySelector('[data-command-button]');
-      if (commandPaletteRef.current && !commandPaletteRef.current.contains(target) && !(commandButton as Element | null)?.contains(target)) {
+      const commandButton = document.querySelector("[data-command-button]");
+      if (
+        commandPaletteRef.current &&
+        !commandPaletteRef.current.contains(target) &&
+        !(commandButton as Element | null)?.contains(target)
+      ) {
         setShowCommandPalette(false);
       }
     };
@@ -154,10 +209,14 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
     if (showCommandPalette) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setActiveSuggestion((prev) => (prev < commandSuggestions.length - 1 ? prev + 1 : 0));
+        setActiveSuggestion((prev) =>
+          prev < commandSuggestions.length - 1 ? prev + 1 : 0,
+        );
       } else if (e.key === "ArrowUp") {
         e.preventDefault();
-        setActiveSuggestion((prev) => (prev > 0 ? prev - 1 : commandSuggestions.length - 1));
+        setActiveSuggestion((prev) =>
+          prev > 0 ? prev - 1 : commandSuggestions.length - 1,
+        );
       } else if (e.key === "Tab" || e.key === "Enter") {
         e.preventDefault();
         if (activeSuggestion >= 0) {
@@ -178,12 +237,21 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
   };
 
   const validateFile = (f: File) => {
-    if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) {
-      toast({ title: "Invalid file", description: "Only PDF files are supported." });
+    if (
+      f.type !== "application/pdf" &&
+      !f.name.toLowerCase().endsWith(".pdf")
+    ) {
+      toast({
+        title: "Invalid file",
+        description: "Only PDF files are supported.",
+      });
       return false;
     }
     if (f.size > MAX_SIZE) {
-      toast({ title: "File too large", description: "Please upload a PDF up to 15MB." });
+      toast({
+        title: "File too large",
+        description: "Please upload a PDF up to 15MB.",
+      });
       return false;
     }
     return true;
@@ -236,7 +304,12 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
     <div className="flex w-full overflow-x-hidden">
       <div className="text-foreground relative flex w-full flex-col items-center justify-center overflow-hidden bg-transparent p-2 sm:p-4">
         <div className="relative mx-auto w-full max-w-5xl">
-          <motion.div className="relative z-10 space-y-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }}>
+          <motion.div
+            className="relative z-10 space-y-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+          >
             <motion.div className="border-border bg-card/80 relative rounded-2xl border shadow-2xl backdrop-blur-2xl">
               <AnimatePresence>
                 {showCommandPalette && (
@@ -254,16 +327,22 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
                           key={suggestion.prefix}
                           className={cn(
                             "flex cursor-pointer items-center gap-2 px-3 py-2 text-xs transition-colors",
-                            activeSuggestion === index ? "bg-primary/20 text-foreground" : "text-muted-foreground hover:bg-primary/10",
+                            activeSuggestion === index
+                              ? "bg-primary/20 text-foreground"
+                              : "text-muted-foreground hover:bg-primary/10",
                           )}
                           onClick={() => selectCommandSuggestion(index)}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: index * 0.03 }}
                         >
-                          <div className="text-primary flex h-5 w-5 items-center justify-center">{suggestion.icon}</div>
+                          <div className="text-primary flex h-5 w-5 items-center justify-center">
+                            {suggestion.icon}
+                          </div>
                           <div className="font-medium">{suggestion.label}</div>
-                          <div className="text-muted-foreground ml-1 text-xs">{suggestion.prefix}</div>
+                          <div className="text-muted-foreground ml-1 text-xs">
+                            {suggestion.prefix}
+                          </div>
                         </motion.div>
                       ))}
                     </div>
@@ -284,7 +363,16 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
                   onBlur={() => setInputFocused(false)}
                   placeholder="Generate question paper..."
                   containerClassName="w-full"
-                  className={cn("w-full px-4 py-3", "resize-none", "bg-transparent", "border-none", "text-foreground text-sm", "focus:outline-none", "placeholder:text-muted-foreground", "min-h-[60px]")}
+                  className={cn(
+                    "w-full px-4 py-3",
+                    "resize-none",
+                    "bg-transparent",
+                    "border-none",
+                    "text-foreground text-sm",
+                    "focus:outline-none",
+                    "placeholder:text-muted-foreground",
+                    "min-h-[60px]",
+                  )}
                   style={{ overflow: "hidden" }}
                   showRing={false}
                 />
@@ -292,10 +380,23 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
 
               <AnimatePresence>
                 {file && (
-                  <motion.div className="flex flex-wrap gap-2 px-4 pb-3" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
-                    <motion.div className="bg-primary/5 text-muted-foreground flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}>
+                  <motion.div
+                    className="flex flex-wrap gap-2 px-4 pb-3"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    <motion.div
+                      className="bg-primary/5 text-muted-foreground flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                    >
                       <span>{file.name}</span>
-                      <button onClick={() => removeAttachment()} className="text-muted-foreground hover:text-foreground transition-colors">
+                      <button
+                        onClick={() => removeAttachment()}
+                        className="text-muted-foreground hover:text-foreground transition-colors"
+                      >
                         <XIcon className="h-3 w-3" />
                       </button>
                     </motion.div>
@@ -305,15 +406,39 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
 
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
                 <div className="flex items-center gap-3">
-                  <input ref={fileInputRef} type="file" accept="application/pdf" className="hidden" onChange={handleFileChange} />
-                  <motion.button type="button" onClick={handleAttachFile} whileTap={{ scale: 0.94 }} className="group text-secondary relative rounded-lg p-2 transition-colors">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="application/pdf"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <motion.button
+                    type="button"
+                    onClick={handleAttachFile}
+                    whileTap={{ scale: 0.94 }}
+                    className="group text-secondary relative rounded-lg p-2 transition-colors"
+                  >
                     <Paperclip className="h-4 w-4 text-secondary" />
-                    <motion.span className="bg-primary/10 absolute inset-0 rounded-lg opacity-0 transition-opacity group-hover:opacity-100" layoutId="button-highlight" />
+                    <motion.span
+                      className="bg-primary/10 absolute inset-0 rounded-lg opacity-0 transition-opacity group-hover:opacity-100"
+                      layoutId="button-highlight"
+                    />
                   </motion.button>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <motion.button type="button" onClick={resetAll} whileTap={{ scale: 0.98 }} className={cn("rounded-lg px-3 py-2 text-sm transition-all", "bg-muted/40 text-muted-foreground hover:bg-muted/60")}>Reset</motion.button>
+                  <motion.button
+                    type="button"
+                    onClick={resetAll}
+                    whileTap={{ scale: 0.98 }}
+                    className={cn(
+                      "rounded-lg px-3 py-2 text-sm transition-all",
+                      "bg-muted/40 text-muted-foreground hover:bg-muted/60",
+                    )}
+                  >
+                    Reset
+                  </motion.button>
                   <motion.button
                     type="button"
                     onClick={handleSendMessage}
@@ -328,8 +453,14 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
                       "disabled:opacity-60",
                     )}
                   >
-                    {loading || isTyping ? <LoaderIcon className="h-4 w-4 animate-[spin_2s_linear_infinite]" /> : <SendIcon className="h-4 w-4" />}
-                    <span>{loading || isTyping ? "Generating..." : "Send"}</span>
+                    {loading || isTyping ? (
+                      <LoaderIcon className="h-4 w-4 animate-[spin_2s_linear_infinite]" />
+                    ) : (
+                      <SendIcon className="h-4 w-4" />
+                    )}
+                    <span>
+                      {loading || isTyping ? "Generating..." : "Send"}
+                    </span>
                   </motion.button>
                 </div>
               </div>
@@ -341,7 +472,12 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
           <motion.div
             className="from-primary via-primary/80 to-secondary pointer-events-none fixed z-0 h-[40rem] w-[40rem] rounded-full bg-gradient-to-r opacity-[0.03] blur-[96px]"
             animate={{ x: mousePosition.x - 400, y: mousePosition.y - 400 }}
-            transition={{ type: "spring", damping: 25, stiffness: 150, mass: 0.5 }}
+            transition={{
+              type: "spring",
+              damping: 25,
+              stiffness: 150,
+              mass: 0.5,
+            }}
           />
         )}
       </div>

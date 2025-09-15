@@ -19,7 +19,10 @@ export default function Login() {
     const em = email.trim();
     const pw = password;
     if (!em || !pw) {
-      toast({ title: "Missing fields", description: "Enter email and password." });
+      toast({
+        title: "Missing fields",
+        description: "Enter email and password.",
+      });
       return;
     }
 
@@ -38,7 +41,9 @@ export default function Login() {
       <div className="w-full max-w-lg rounded-xl border bg-card p-8 sm:p-10 card-surface">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-secondary">Log in</h1>
-          <p className="text-sm text-muted-foreground">Demo login: enter any email and password</p>
+          <p className="text-sm text-muted-foreground">
+            Demo login: enter any email and password
+          </p>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <div className="grid gap-2">
@@ -65,7 +70,12 @@ export default function Login() {
               className="input-black bg-black text-white placeholder:text-white/60 focus:bg-black focus-visible:bg-black focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
             />
           </div>
-          <Button type="submit" className="w-full" variant="secondary" disabled={loading}>
+          <Button
+            type="submit"
+            className="w-full"
+            variant="secondary"
+            disabled={loading}
+          >
             {loading ? "Logging in..." : "Log in"}
           </Button>
         </form>

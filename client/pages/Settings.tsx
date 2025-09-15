@@ -134,7 +134,11 @@ export default function Settings() {
           <Button variant="secondary" onClick={save}>
             Save
           </Button>
-          <Button variant="outline" onClick={reset} className="text-white hover:bg-transparent hover:border-transparent">
+          <Button
+            variant="outline"
+            onClick={reset}
+            className="text-white hover:bg-transparent hover:border-transparent"
+          >
             Reset
           </Button>
         </div>
@@ -142,7 +146,9 @@ export default function Settings() {
 
       <div className="rounded-xl border bg-card p-6">
         <h2 className="text-lg font-semibold mb-3">Account</h2>
-        <p className="text-sm text-muted-foreground mb-4">You are using a demo login. You can log out anytime.</p>
+        <p className="text-sm text-muted-foreground mb-4">
+          You are using a demo login. You can log out anytime.
+        </p>
         <Button
           type="button"
           variant="secondary"

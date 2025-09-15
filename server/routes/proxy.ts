@@ -4,8 +4,8 @@ const EXTERNAL = "https://api-va5v.onrender.com/generate-questions" as const;
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Access-Control-Allow-Methods": "*",
+  "Access-Control-Allow-Headers": "*",
 } as const;
 
 export const handleProxy: RequestHandler = async (req, res) => {

@@ -36,6 +36,10 @@ export function createServer() {
     res.json({ message: ping });
   });
 
+  app.get("/api", (_req, res) => {
+    res.json({ status: "API Running" });
+  });
+
   app.get("/api/health", (_req, res) => {
     res.json({ status: "API Running" });
   });

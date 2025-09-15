@@ -24,6 +24,9 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
+// Direct API endpoint used when serverless functions are unavailable (static deploys)
+const DIRECT_API_URL = "https://api-va5v.onrender.com/generate-questions" as const;
+
 export default function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [query, setQuery] = useState("");
@@ -91,16 +94,24 @@ export default function Index() {
       return;
     }
 
-    const send = async (timeoutMs: number) => {
+    const sendTo = async (urlStr: string, timeoutMs: number) => {
       const form = new FormData();
       form.append("pdf", file);
       form.append("query", q);
+
+      // If calling external endpoint, also include query as URL param for compatibility
+      let finalUrl = urlStr;
+      if (/^https?:/i.test(urlStr) && q) {
+        const u = new URL(urlStr);
+        u.searchParams.set("query", q);
+        finalUrl = u.toString();
+      }
 
       const controller = new AbortController();
       const t = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        const res = await fetch("/api/generate-questions", {
+        const res = await fetch(finalUrl, {
           method: "POST",
           body: form,
           signal: controller.signal,
@@ -108,7 +119,6 @@ export default function Index() {
         });
         return res;
       } catch (err: any) {
-        // Normalize abort-like errors to a null response so callers can handle retries
         const msg = String(err?.message || "").toLowerCase();
         if (err?.name === "AbortError" || msg.includes("signal is aborted") || msg.includes("aborted")) {
           return null;
@@ -123,8 +133,9 @@ export default function Index() {
       setLoading(true);
       let res: Response | null = null;
 
+      // 1) Try internal serverless/express endpoint
       try {
-        res = await send(settings.initialTimeoutMs);
+        res = await sendTo("/api/generate-questions", settings.initialTimeoutMs);
       } catch (err: any) {
         if (err?.name === "AbortError") {
           toast({ title: "Slow connection", description: "Retrying..." });
@@ -133,12 +144,16 @@ export default function Index() {
         }
       }
 
-      if ((!res || !res.ok || res.status === 504) && settings.autoRetry) {
+      // 2) If failed or returned HTML/404, fallback to direct external API
+      const isBad = !res || !res.ok || res.status === 404 || (res.headers?.get("content-type") || "").includes("text/html");
+      if (isBad) {
+        await new Promise((r) => setTimeout(r, 200));
+        res = await sendTo(DIRECT_API_URL, settings.retryTimeoutMs);
+      } else if ((!res || res.status === 504) && settings.autoRetry) {
         await new Promise((r) => setTimeout(r, 800));
-        res = await send(settings.retryTimeoutMs);
+        res = await sendTo("/api/generate-questions", settings.retryTimeoutMs);
       }
 
-      // If send returned null (e.g. aborted), normalize to an error to be handled below
       if (!res) {
         throw new Error("Request timed out or was aborted");
       }

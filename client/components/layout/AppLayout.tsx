@@ -16,10 +16,19 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileText, Home, Settings } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 export function AppLayout({ children }: PropsWithChildren) {
   const location = useLocation();
   const path = location.pathname;
+  const [routeLoading, setRouteLoading] = useState(false);
+
+  useEffect(() => {
+    setRouteLoading(true);
+    const t = setTimeout(() => setRouteLoading(false), 450);
+    return () => clearTimeout(t);
+  }, [path]);
+
   return (
     <SidebarProvider>
       <div className="group/sidebar-wrapper flex min-h-svh w-full">
@@ -71,7 +80,16 @@ export function AppLayout({ children }: PropsWithChildren) {
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background px-4">
             <SidebarTrigger />
             <div className="font-semibold">Dashboard</div>
-            <div className="ml-auto" />
+            <div className="ml-auto">
+              {routeLoading && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                    <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" className="opacity-75" />
+                  </svg>
+                </div>
+              )}
+            </div>
           </header>
           <main className={cn("container mx-auto px-4 py-6")}>{children}</main>
           <footer className="border-t bg-background/50">

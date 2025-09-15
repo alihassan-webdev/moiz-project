@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -34,6 +34,7 @@ export default function Index() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ApiResult | null>(null);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     try {
@@ -77,6 +78,15 @@ export default function Index() {
     }
     setError(null);
     setFile(f);
+  };
+
+  const onReset = () => {
+    setFile(null);
+    setQuery("");
+    setError(null);
+    setResult(null);
+    const el = fileInputRef.current;
+    if (el) el.value = "";
   };
 
   const runSubmit = async () => {
@@ -222,6 +232,7 @@ export default function Index() {
               )}
             >
               <input
+                ref={fileInputRef}
                 type="file"
                 accept="application/pdf"
                 className="hidden"
@@ -275,6 +286,9 @@ export default function Index() {
           <div className="flex items-center gap-3">
             <Button type="submit" disabled={loading} variant="secondary" className="min-w-32">
               {loading ? "Generating..." : "Generate"}
+            </Button>
+            <Button type="button" onClick={onReset} className="bg-black text-white border border-yellow-400 hover:bg-black/90">
+              Reset
             </Button>
           </div>
         </form>

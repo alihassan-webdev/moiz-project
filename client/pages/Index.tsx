@@ -91,15 +91,16 @@ export default function Index() {
     if (el) el.value = "";
   };
 
-  const runSubmit = async () => {
+  const runSubmit = async (fArg?: File | null, qArg?: string) => {
     setError(null);
     setResult(null);
-    if (!file) {
+    const theFile = fArg ?? file;
+    const q = (qArg ?? query).trim();
+    if (!theFile) {
       setError("Attach a PDF file first.");
       toast({ title: "Missing PDF", description: "Attach a PDF to continue." });
       return;
     }
-    const q = query.trim();
     if (!q) {
       setError("Enter a query.");
       toast({ title: "Missing query", description: "Write what to generate." });
@@ -110,11 +111,11 @@ export default function Index() {
       const isExternal = /^https?:/i.test(urlStr);
 
       const form = new FormData();
-      form.append("pdf", file);
+      form.append("pdf", theFile);
       form.append("query", q);
       // External APIs may expect the field name "file"; include both for compatibility
       if (isExternal) {
-        form.append("file", file);
+        form.append("file", theFile);
       }
 
       let finalUrl = urlStr;
@@ -246,89 +247,21 @@ export default function Index() {
       </section>
 
       <section className="mx-auto mt-10 grid max-w-5xl gap-8 md:grid-cols-5">
-        <form onSubmit={submit} className="md:col-span-3 space-y-6">
-          <div>
-            <label
-              onDrop={onDrop}
-              onDragOver={(e) => e.preventDefault()}
-              className={cn(
-                "group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl p-8 text-center transition-colors card-surface",
-                file
-                  ? "ring-2 ring-secondary/70"
-                  : "border-2 border-dashed border-secondary/40 hover:ring-2 hover:ring-secondary/60",
-              )}
-            >
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFile(f);
-                }}
-              />
-              <div className="rounded-md bg-gradient-to-br from-secondary to-secondary/80 p-[2px]">
-                <div className="rounded-md bg-background px-4 py-2 text-sm font-medium text-foreground">
-                  {file ? "PDF attached" : "Click to upload or drag & drop"}
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {file ? file.name : "PDF up to 15MB"}
-              </p>
-            </label>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">Your query</label>
-            <Textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (
-                  e.key === "Enter" &&
-                  !e.shiftKey &&
-                  !e.ctrlKey &&
-                  !e.altKey
-                ) {
-                  e.preventDefault();
-                  if (!loading) {
-                    // Trigger submit on Enter
-                    // Avoid unhandled promise rejections when calling from key handlers
-                    void runSubmit();
-                  }
-                }
-              }}
-              placeholder="e.g. Generate 10 multiple-choice questions covering key concepts"
-              rows={5}
-            />
-          </div>
-
+        <div className="md:col-span-3 space-y-4">
           {error && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
               {error}
             </div>
           )}
-
-          <div className="flex items-center gap-3">
-            <Button
-              type="submit"
-              disabled={loading}
-              variant="secondary"
-              className="min-w-32"
-            >
-              {loading ? "Generating..." : "Generate"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onReset}
-              className="bg-black text-white border-yellow-400 hover:bg-black/90"
-            >
-              Reset
-            </Button>
-          </div>
-        </form>
+          <AnimatedAIChat
+            loading={loading}
+            onSubmit={async ({ file: f, query: q }) => {
+              if (f) setFile(f);
+              setQuery(q);
+              await runSubmit(f, q);
+            }}
+          />
+        </div>
 
         <div className="md:col-span-2">
           <div className="sticky top-24">

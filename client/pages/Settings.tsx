@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { logout } from "@/lib/auth";
 
 type AppSettings = {
   initialTimeoutMs: number;
@@ -24,6 +26,7 @@ const DEFAULTS: AppSettings = {
 
 export default function Settings() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULTS);
+  const navigate = useNavigate();
 
   useEffect(() => {
     try {
@@ -76,6 +79,7 @@ export default function Settings() {
                 initialTimeoutMs: Number(e.target.value),
               }))
             }
+            className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
           />
         </div>
 
@@ -92,6 +96,7 @@ export default function Settings() {
                 retryTimeoutMs: Number(e.target.value),
               }))
             }
+            className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
           />
         </div>
 
@@ -121,6 +126,7 @@ export default function Settings() {
             onChange={(e) =>
               setSettings((s) => ({ ...s, defaultQuery: e.target.value }))
             }
+            className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
           />
         </div>
 
@@ -128,10 +134,31 @@ export default function Settings() {
           <Button variant="secondary" onClick={save}>
             Save
           </Button>
-          <Button variant="outline" onClick={reset} className="text-white hover:bg-transparent hover:border-transparent">
+          <Button
+            variant="outline"
+            onClick={reset}
+            className="text-white hover:bg-transparent hover:border-transparent"
+          >
             Reset
           </Button>
         </div>
+      </div>
+
+      <div className="rounded-xl border bg-card p-6">
+        <h2 className="text-lg font-semibold mb-3">Account</h2>
+        <p className="text-sm text-muted-foreground mb-4">
+          You are using a demo login. You can log out anytime.
+        </p>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={() => {
+            logout();
+            navigate("/login", { replace: true });
+          }}
+        >
+          Log out
+        </Button>
       </div>
     </div>
   );

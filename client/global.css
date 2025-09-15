@@ -113,6 +113,61 @@
   }
 }
 
+/* Yellow scrollbar utility for scrollable areas (matches theme secondary color) */
+.scrollbar-yellow {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: hsl(var(--secondary)) transparent; /* Firefox */
+}
+.scrollbar-yellow::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.scrollbar-yellow::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-yellow::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--secondary));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.scrollbar-yellow::-webkit-scrollbar-thumb:hover {
+  filter: brightness(0.92);
+}
+
+/* Black input utility to keep inputs black on focus and autofill */
+.input-black {
+  background-color: #000 !important;
+  color: #fff !important;
+}
+.input-black::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+.input-black:focus,
+.input-black:active {
+  background-color: #000 !important;
+}
+.input-black:-webkit-autofill,
+.input-black:-webkit-autofill:hover,
+.input-black:-webkit-autofill:focus {
+  -webkit-text-fill-color: #fff;
+  box-shadow: 0 0 0px 1000px #000 inset;
+  transition: background-color 9999s ease-out 0s;
+}
+
+/* Hide number input spinners globally */
+@layer base {
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
 /* Hide global scrollbars but keep scrolling */
 @layer base {
   html,

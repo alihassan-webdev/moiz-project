@@ -15,13 +15,18 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { FileText, Home, Settings } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useSwipeNavigation } from "@/hooks/use-swipe-navigation";
 
 export function AppLayout({ children }: PropsWithChildren) {
   const location = useLocation();
   const path = location.pathname;
   const [routeLoading, setRouteLoading] = useState(false);
+  const navigate = useNavigate();
+  useSwipeNavigation(() => {
+    if (window.history.length > 1) navigate(-1);
+  });
 
   useEffect(() => {
     setRouteLoading(true);

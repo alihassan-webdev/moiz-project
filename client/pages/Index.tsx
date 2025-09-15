@@ -95,13 +95,18 @@ export default function Index() {
     }
 
     const sendTo = async (urlStr: string, timeoutMs: number) => {
+      const isExternal = /^https?:/i.test(urlStr);
+
       const form = new FormData();
       form.append("pdf", file);
       form.append("query", q);
+      // External APIs may expect the field name "file"; include both for compatibility
+      if (isExternal) {
+        form.append("file", file);
+      }
 
-      // If calling external endpoint, also include query as URL param for compatibility
       let finalUrl = urlStr;
-      if (/^https?:/i.test(urlStr) && q) {
+      if (isExternal && q) {
         const u = new URL(urlStr);
         u.searchParams.set("query", q);
         finalUrl = u.toString();
@@ -116,11 +121,13 @@ export default function Index() {
           body: form,
           signal: controller.signal,
           headers: { Accept: "application/json" },
+          // CORS-friendly defaults for external endpoints
+          ...(isExternal ? { mode: "cors" as const, credentials: "omit" as const, referrerPolicy: "no-referrer" as const } : {}),
         });
         return res;
       } catch (err: any) {
         const msg = String(err?.message || "").toLowerCase();
-        if (err?.name === "AbortError" || msg.includes("signal is aborted") || msg.includes("aborted")) {
+        if (err?.name === "AbortError" || msg.includes("signal is aborted") || msg.includes("aborted") || msg.includes("failed to fetch")) {
           return null;
         }
         throw err;

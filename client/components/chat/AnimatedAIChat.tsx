@@ -310,19 +310,6 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
                     <Paperclip className="h-4 w-4 text-secondary" />
                     <motion.span className="bg-primary/10 absolute inset-0 rounded-lg opacity-0 transition-opacity group-hover:opacity-100" layoutId="button-highlight" />
                   </motion.button>
-                  <motion.button
-                    type="button"
-                    data-command-button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCommandPalette((prev) => !prev);
-                    }}
-                    whileTap={{ scale: 0.94 }}
-                    className={cn("group text-muted-foreground hover:text-foreground relative rounded-lg p-2 transition-colors", showCommandPalette && "bg-primary/20 text-foreground")}
-                  >
-                    <Command className="h-4 w-4" />
-                    <motion.span className="bg-primary/10 absolute inset-0 rounded-lg opacity-0 transition-opacity group-hover:opacity-100" layoutId="button-highlight" />
-                  </motion.button>
                 </div>
 
                 <div className="flex items-center gap-2">

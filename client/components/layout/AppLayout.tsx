@@ -72,7 +72,12 @@ export function AppLayout({ children }: PropsWithChildren) {
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background px-4">
             <SidebarTrigger />
             <div className="font-semibold">Dashboard</div>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <Button asChild variant="secondary" size="icon" aria-label="Settings">
+                <Link to="/settings">
+                  <Settings />
+                </Link>
+              </Button>
               {routeLoading && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">

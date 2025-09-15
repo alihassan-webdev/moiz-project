@@ -52,9 +52,9 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     const url = new URL(EXTERNAL_API);
     if (query) url.searchParams.set("query", query);
 
-    // Abort if upstream is too slow to respond
+    // Abort if upstream is too slow to respond (bump to 60s for public proxies)
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30_000);
+    const timeout = setTimeout(() => controller.abort(), 60_000);
 
     const upstream = await fetch(url, {
       method: "POST",

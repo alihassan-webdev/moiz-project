@@ -66,7 +66,6 @@ export default function Index() {
           body: form,
           signal: controller.signal,
           headers: { Accept: "application/json" },
-          keepalive: true,
         });
         return res;
       } finally {
@@ -79,7 +78,7 @@ export default function Index() {
       let res: Response | null = null;
 
       try {
-        res = await send(12_000);
+        res = await send(25_000);
       } catch (err: any) {
         if (err?.name === "AbortError") {
           toast({ title: "Slow connection", description: "Retrying..." });
@@ -89,8 +88,8 @@ export default function Index() {
       }
 
       if (!res || !res.ok || res.status === 504) {
-        await new Promise((r) => setTimeout(r, 600));
-        res = await send(20_000);
+        await new Promise((r) => setTimeout(r, 800));
+        res = await send(55_000);
       }
 
       const contentType = res.headers.get("content-type") || "";

@@ -15,7 +15,7 @@ export function createServer() {
     allowedHeaders: ["Content-Type", "Authorization"],
   } as const;
   app.use(cors(corsOptions));
-  app.options("(.*)", cors(corsOptions));
+  app.options(/.*/, cors(corsOptions));
   app.use((_, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");

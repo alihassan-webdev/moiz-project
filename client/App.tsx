@@ -20,6 +20,7 @@ import Settings from "./pages/Settings";
 import { AnimatePresence, motion } from "framer-motion";
 import { isLoggedIn } from "@/lib/auth";
 
+console.log(import.meta.env.VITE_PREDICT_ENDPOINT);
 const queryClient = new QueryClient();
 
 function PageWrapper({ children }: { children: React.ReactNode }) {

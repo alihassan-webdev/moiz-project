@@ -12,51 +12,47 @@
    * A different format will require also updating the theme in tailwind.config.ts.
   */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Premium theme - Midnight Teal & Sunset Gold
+       Apply sidebar palette across the entire site by default */
+    --sidebar-background: 195 40% 6%;
+    --sidebar-foreground: 210 16% 96%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --background: 195 40% 6%; /* use sidebar background as global background */
+    --foreground: 210 16% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --card: 195 40% 8%;
+    --card-foreground: 210 16% 96%;
 
-    --primary: 262 83% 54%;
-    --primary-foreground: 0 0% 100%;
+    --popover: 195 40% 9%;
+    --popover-foreground: 210 16% 96%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --primary: 184 62% 40%; /* teal */
+    --primary-foreground: 210 20% 98%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --secondary: 45 100% 56%; /* gold accent */
+    --secondary-foreground: 210 20% 12%;
 
-    --accent: 258 100% 97%;
-    --accent-foreground: 262 83% 30%;
+    --muted: 195 40% 10%;
+    --muted-foreground: 210 12% 88%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --accent: 190 40% 92%;
+    --accent-foreground: 184 62% 40%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 54%;
+    --destructive: 354 65% 55%;
+    --destructive-foreground: 210 20% 98%;
 
-    --radius: 0.75rem;
+    --border: 195 30% 12%;
+    --input: 195 30% 12%;
+    --ring: 184 62% 45%;
 
-    --sidebar-background: 0 0% 98%;
+    --radius: 0.875rem;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 262 83% 54%;
-
-    --sidebar-primary-foreground: 0 0% 100%;
-
-    --sidebar-accent: 258 100% 97%;
-
-    --sidebar-accent-foreground: 262 83% 30%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 262 83% 54%;
+    --sidebar-primary: 184 62% 40%;
+    --sidebar-primary-foreground: 210 20% 98%;
+    --sidebar-accent: 45 100% 56%;
+    --sidebar-accent-foreground: 210 20% 12%;
+    --sidebar-border: 195 20% 12%;
+    --sidebar-ring: 184 62% 45%;
   }
 
   .dark {
@@ -104,6 +100,13 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01" on;
+  }
+
+  /* Premium surface shadows */
+  .card-surface {
+    box-shadow: 0 6px 18px rgba(16,24,40,0.08), 0 2px 6px rgba(16,24,40,0.06);
+    border-radius: var(--radius);
   }
 }

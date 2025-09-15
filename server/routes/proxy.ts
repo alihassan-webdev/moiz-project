@@ -56,6 +56,8 @@ export const handleProxy: RequestHandler = async (req, res) => {
   } catch (err: any) {
     Object.entries(CORS_HEADERS).forEach(([k, v]) => res.setHeader(k, v));
     const message = err?.message || String(err);
-    return res.status(502).json({ error: true, message: message || "Internal Server Error" });
+    return res
+      .status(502)
+      .json({ error: true, message: message || "Internal Server Error" });
   }
 };

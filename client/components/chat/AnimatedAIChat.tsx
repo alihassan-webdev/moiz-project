@@ -134,7 +134,13 @@ const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 );
 InnerTextarea.displayName = "Textarea";
 
-export default function AnimatedAIChat({ onSubmit, loading, result, query, onReset }: Props) {
+export default function AnimatedAIChat({
+  onSubmit,
+  loading,
+  result,
+  query,
+  onReset,
+}: Props) {
   const [value, setValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -356,7 +362,9 @@ export default function AnimatedAIChat({ onSubmit, loading, result, query, onRes
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <h3 className="text-sm font-semibold">Response</h3>
-                      <p className="text-xs text-muted-foreground">Results from your latest request</p>
+                      <p className="text-xs text-muted-foreground">
+                        Results from your latest request
+                      </p>
                     </div>
                     <button
                       type="button"
@@ -364,14 +372,17 @@ export default function AnimatedAIChat({ onSubmit, loading, result, query, onRes
                       disabled={!result || !!loading}
                       onClick={() => {
                         if (!result) return;
-                        const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+                        const blob = new Blob([result], {
+                          type: "text/plain;charset=utf-8",
+                        });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
-                        const safeQuery = (query || "")
-                          .trim()
-                          .slice(0, 50)
-                          .replace(/[^a-z0-9_-]/gi, "_") || "questions";
+                        const safeQuery =
+                          (query || "")
+                            .trim()
+                            .slice(0, 50)
+                            .replace(/[^a-z0-9_-]/gi, "_") || "questions";
                         const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
                         a.download = filename;
                         document.body.appendChild(a);
@@ -385,7 +396,14 @@ export default function AnimatedAIChat({ onSubmit, loading, result, query, onRes
                         (!result || loading) && "opacity-60",
                       )}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-4 w-4"
+                      >
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                         <polyline points="7 10 12 15 17 10" />
                         <line x1="12" y1="15" x2="12" y2="3" />
@@ -396,15 +414,33 @@ export default function AnimatedAIChat({ onSubmit, loading, result, query, onRes
                   <div className="mt-2 max-h-[420px] overflow-auto rounded-md bg-background p-3 text-sm scrollbar-yellow">
                     {loading && (
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
-                          <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" className="opacity-75" />
+                        <svg
+                          className="h-4 w-4 animate-spin"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                            className="opacity-25"
+                          />
+                          <path
+                            d="M22 12a10 10 0 0 1-10 10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            className="opacity-75"
+                          />
                         </svg>
                         Generating...
                       </div>
                     )}
                     {!!result && !loading && (
-                      <pre className="whitespace-pre-wrap break-words text-foreground">{result}</pre>
+                      <pre className="whitespace-pre-wrap break-words text-foreground">
+                        {result}
+                      </pre>
                     )}
                   </div>
                 </div>
@@ -463,7 +499,6 @@ export default function AnimatedAIChat({ onSubmit, loading, result, query, onRes
                   </motion.div>
                 )}
               </AnimatePresence>
-
 
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
                 <div className="flex items-center gap-3">

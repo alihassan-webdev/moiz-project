@@ -158,7 +158,10 @@ export default function Index() {
         res = await sendTo("/api/proxy", settings.initialTimeoutMs);
       } catch (err: any) {
         // Don't rethrow — treat as null so fallbacks run.
-        toast({ title: "Connection issue", description: "Will try fallback endpoints." });
+        toast({
+          title: "Connection issue",
+          description: "Will try fallback endpoints.",
+        });
         res = null;
       }
 
@@ -166,7 +169,10 @@ export default function Index() {
       if (!res || !res.ok) {
         await new Promise((r) => setTimeout(r, 200));
         try {
-          res = await sendTo("/api/generate-questions", settings.retryTimeoutMs);
+          res = await sendTo(
+            "/api/generate-questions",
+            settings.retryTimeoutMs,
+          );
         } catch (err: any) {
           res = null;
         }

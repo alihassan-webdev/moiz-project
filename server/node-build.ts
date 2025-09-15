@@ -36,7 +36,8 @@ server.headersTimeout = 65_000;
 // Optional keep-alive ping (prevent idling on some hosts)
 const enableKeepAlive = process.env.KEEP_ALIVE !== "false";
 if (enableKeepAlive) {
-  const pingUrl = process.env.KEEP_ALIVE_PING_URL || `http://localhost:${port}/health`;
+  const pingUrl =
+    process.env.KEEP_ALIVE_PING_URL || `http://localhost:${port}/health`;
   setInterval(() => {
     fetch(pingUrl).catch(() => void 0);
   }, 5 * 60_000).unref?.();

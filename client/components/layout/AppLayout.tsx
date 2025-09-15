@@ -37,9 +37,16 @@ export function AppLayout({ children }: PropsWithChildren) {
   return (
     <SidebarProvider>
       <div className="group/sidebar-wrapper flex min-h-svh w-full">
-        <Sidebar collapsible="icon" className="bg-[radial-gradient(120%_80%_at_10%_10%,rgba(18,83,83,0.18),transparent),linear-gradient(180deg,rgba(12,34,46,0.95),rgba(8,20,28,0.95))] text-white border-0">
+        <Sidebar
+          collapsible="icon"
+          className="bg-[radial-gradient(120%_80%_at_10%_10%,rgba(18,83,83,0.18),transparent),linear-gradient(180deg,rgba(12,34,46,0.95),rgba(8,20,28,0.95))] text-white border-0"
+        >
           <SidebarHeader>
-            <Link to="/" className="flex items-center gap-3 px-4 py-3" aria-label="Home">
+            <Link
+              to="/"
+              className="flex items-center gap-3 px-4 py-3"
+              aria-label="Home"
+            >
               {/* Logo and label removed as requested */}
               <span className="sr-only">Home</span>
             </Link>
@@ -49,7 +56,10 @@ export function AppLayout({ children }: PropsWithChildren) {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path === "/"}>
-                    <Link to="/" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/6">
+                    <Link
+                      to="/"
+                      className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/6"
+                    >
                       <Home />
                       <span>Dashboard</span>
                     </Link>
@@ -60,7 +70,10 @@ export function AppLayout({ children }: PropsWithChildren) {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path === "/settings"}>
-                    <Link to="/settings" className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/6">
+                    <Link
+                      to="/settings"
+                      className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-white/6"
+                    >
                       <Settings />
                       <span>Settings</span>
                     </Link>
@@ -78,7 +91,13 @@ export function AppLayout({ children }: PropsWithChildren) {
             <SidebarTrigger />
             <div className="font-semibold">Dashboard</div>
             <div className="ml-auto flex items-center gap-2">
-              <Button asChild variant="secondary" size="icon" aria-label="Settings" className="md:hidden">
+              <Button
+                asChild
+                variant="secondary"
+                size="icon"
+                aria-label="Settings"
+                className="md:hidden"
+              >
                 <Link to="/settings">
                   <Settings />
                 </Link>

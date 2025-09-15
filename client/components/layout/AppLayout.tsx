@@ -15,8 +15,11 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { FileText, Home, Settings } from "lucide-react";
+import { useLocation } from "react-router-dom";
 
 export function AppLayout({ children }: PropsWithChildren) {
+  const location = useLocation();
+  const path = location.pathname;
   return (
     <SidebarProvider>
       <div className="group/sidebar-wrapper flex min-h-svh w-full">
@@ -31,7 +34,7 @@ export function AppLayout({ children }: PropsWithChildren) {
             <nav className="px-2">
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive>
+                  <SidebarMenuButton asChild isActive={path === "/"}>
                     <a href="/">
                       <Home />
                       <span>Dashboard</span>
@@ -39,8 +42,8 @@ export function AppLayout({ children }: PropsWithChildren) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <a href="/">
+                  <SidebarMenuButton asChild isActive={path === "/generate"}>
+                    <a href="/generate">
                       <FileText />
                       <span>Generate</span>
                     </a>
@@ -50,8 +53,8 @@ export function AppLayout({ children }: PropsWithChildren) {
               <SidebarSeparator className="my-2" />
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <a href="#settings">
+                  <SidebarMenuButton asChild isActive={path === "/settings"}>
+                    <a href="/settings">
                       <Settings />
                       <span>Settings</span>
                     </a>

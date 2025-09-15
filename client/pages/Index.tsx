@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { Copy, Download } from "lucide-react";
 
 type ApiResult = string;
 
@@ -66,8 +67,7 @@ export default function Index() {
     setFile(f);
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const runSubmit = async () => {
     setError(null);
     setResult(null);
     if (!file) {
@@ -144,6 +144,11 @@ export default function Index() {
     }
   };
 
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!loading) await runSubmit();
+  };
+
   return (
     <div>
       <section className="relative overflow-hidden rounded-2xl border bg-gradient-to-br from-purple-600 via-indigo-600 to-blue-600 px-6 py-16 text-white shadow-sm">
@@ -191,6 +196,20 @@ export default function Index() {
             <Textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (
+                  e.key === "Enter" &&
+                  !e.shiftKey &&
+                  !e.ctrlKey &&
+                  !e.altKey
+                ) {
+                  e.preventDefault();
+                  if (!loading) {
+                    // Trigger submit on Enter
+                    runSubmit();
+                  }
+                }
+              }}
               placeholder="e.g. Generate 10 multiple-choice questions covering key concepts"
               rows={5}
             />
@@ -220,6 +239,8 @@ export default function Index() {
                 <Button
                   type="button"
                   variant="outline"
+                  size="icon"
+                  aria-label="Copy"
                   disabled={!result || loading}
                   onClick={async () => {
                     if (!result) return;
@@ -231,11 +252,14 @@ export default function Index() {
                     }
                   }}
                 >
-                  Copy
+                  <Copy />
+                  <span className="sr-only">Copy</span>
                 </Button>
                 <Button
                   type="button"
                   variant="secondary"
+                  size="icon"
+                  aria-label="Download"
                   disabled={!result || loading}
                   onClick={() => {
                     if (!result) return;
@@ -250,7 +274,8 @@ export default function Index() {
                     URL.revokeObjectURL(url);
                   }}
                 >
-                  Download
+                  <Download />
+                  <span className="sr-only">Download</span>
                 </Button>
               </div>
             </div>

@@ -150,9 +150,9 @@ export default function Index() {
       setLoading(true);
       let res: Response | null = null;
 
-      // 1) Try internal serverless/express endpoint
+      // 1) Prefer universal proxy endpoint (works on Express, Vercel, Netlify)
       try {
-        res = await sendTo("/api/generate-questions", settings.initialTimeoutMs);
+        res = await sendTo("/api/proxy", settings.initialTimeoutMs);
       } catch (err: any) {
         if (err?.name === "AbortError") {
           toast({ title: "Slow connection", description: "Retrying..." });
@@ -161,14 +161,17 @@ export default function Index() {
         }
       }
 
-      // 2) If failed or returned HTML/404, fallback to direct external API
+      // 2) Fallback to local express route if available
+      if (!res || !res.ok) {
+        await new Promise((r) => setTimeout(r, 200));
+        res = await sendTo("/api/generate-questions", settings.retryTimeoutMs);
+      }
+
+      // 3) If still bad or HTML, go direct external API (requires CORS on remote)
       const isBad = !res || !res.ok || res.status === 404 || (res.headers?.get("content-type") || "").includes("text/html");
       if (isBad) {
         await new Promise((r) => setTimeout(r, 200));
         res = await sendTo(DIRECT_API_URL, settings.retryTimeoutMs);
-      } else if ((!res || res.status === 504) && settings.autoRetry) {
-        await new Promise((r) => setTimeout(r, 800));
-        res = await sendTo("/api/generate-questions", settings.retryTimeoutMs);
       }
 
       if (!res) {

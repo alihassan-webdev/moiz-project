@@ -242,7 +242,7 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
   return (
     <div className="flex w-full overflow-x-hidden">
       <div className="text-foreground relative flex w-full flex-col items-center justify-center overflow-hidden bg-transparent p-2 sm:p-4">
-        <div className="relative mx-auto w-full max-w-3xl">
+        <div className="relative mx-auto w-full max-w-5xl">
           <motion.div className="relative z-10 space-y-8" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, ease: "easeOut" }}>
             <motion.div className="border-border bg-card/80 relative rounded-2xl border shadow-2xl backdrop-blur-2xl">
               <AnimatePresence>

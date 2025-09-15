@@ -160,7 +160,7 @@ export default function Index() {
       setLoading(true);
       let res: Response | null = null;
 
-      // 1) Prefer universal proxy endpoint (works on Express, Vercel, Netlify)
+      // Send directly to the API endpoint configured via VITE_PREDICT_ENDPOINT
       try {
         if (!API_URL) {
           throw new Error("Missing VITE_PREDICT_ENDPOINT in .env");

@@ -61,36 +61,18 @@ export function AppLayout({ children }: PropsWithChildren) {
             </nav>
           </SidebarContent>
           <SidebarFooter>
-            <div className="px-3 py-2 text-xs text-muted-foreground">
-              PDF Question Generator
-            </div>
+            <div className="px-3 py-2" />
           </SidebarFooter>
         </Sidebar>
         <SidebarInset>
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background px-4">
             <SidebarTrigger />
             <div className="font-semibold">Dashboard</div>
-            <div className="ml-auto">
-              <Button variant="outline" asChild>
-                <a href="https://api-va5v.onrender.com/generate-questions" target="_blank" rel="noreferrer">API</a>
-              </Button>
-            </div>
+            <div className="ml-auto" />
           </header>
           <main className={cn("container mx-auto px-4 py-6")}>{children}</main>
           <footer className="border-t bg-background/50">
-            <div className="container mx-auto px-4 py-6 text-sm text-muted-foreground">
-              <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
-                <p className="text-center sm:text-left">Upload a PDF and generate questions with your query.</p>
-                <a
-                  href="https://api-va5v.onrender.com/generate-questions"
-                  target="_blank"
-                  className="text-primary hover:underline"
-                  rel="noreferrer"
-                >
-                  API: /generate-questions
-                </a>
-              </div>
-            </div>
+            <div className="container mx-auto px-4 py-6" />
           </footer>
         </SidebarInset>
       </div>

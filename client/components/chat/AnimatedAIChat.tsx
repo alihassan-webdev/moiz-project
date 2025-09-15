@@ -323,8 +323,9 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
                     className={cn(
                       "rounded-lg px-4 py-2 text-sm font-medium transition-all",
                       "flex items-center gap-2",
-                      value.trim() ? "bg-secondary text-secondary-foreground shadow-primary/10 shadow-lg" : "bg-muted/50 text-muted-foreground",
-                      loading || isTyping ? "opacity-80" : "",
+                      "bg-secondary text-secondary-foreground shadow-primary/10 shadow-lg",
+                      (loading || isTyping) && "opacity-80",
+                      "disabled:opacity-60",
                     )}
                   >
                     {loading || isTyping ? <LoaderIcon className="h-4 w-4 animate-[spin_2s_linear_infinite]" /> : <SendIcon className="h-4 w-4" />}

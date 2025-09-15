@@ -79,6 +79,7 @@ export default function Settings() {
                 initialTimeoutMs: Number(e.target.value),
               }))
             }
+            className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
           />
         </div>
 
@@ -95,6 +96,7 @@ export default function Settings() {
                 retryTimeoutMs: Number(e.target.value),
               }))
             }
+            className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
           />
         </div>
 
@@ -124,6 +126,7 @@ export default function Settings() {
             onChange={(e) =>
               setSettings((s) => ({ ...s, defaultQuery: e.target.value }))
             }
+            className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
           />
         </div>
 

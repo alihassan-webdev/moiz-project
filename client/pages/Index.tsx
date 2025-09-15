@@ -157,17 +157,19 @@ export default function Index() {
       try {
         res = await sendTo("/api/proxy", settings.initialTimeoutMs);
       } catch (err: any) {
-        if (err?.name === "AbortError") {
-          toast({ title: "Slow connection", description: "Retrying..." });
-        } else {
-          throw err;
-        }
+        // Don't rethrow — treat as null so fallbacks run.
+        toast({ title: "Connection issue", description: "Will try fallback endpoints." });
+        res = null;
       }
 
       // 2) Fallback to local express route if available
       if (!res || !res.ok) {
         await new Promise((r) => setTimeout(r, 200));
-        res = await sendTo("/api/generate-questions", settings.retryTimeoutMs);
+        try {
+          res = await sendTo("/api/generate-questions", settings.retryTimeoutMs);
+        } catch (err: any) {
+          res = null;
+        }
       }
 
       // 3) If still bad or HTML, go direct external API (requires CORS on remote)

@@ -11,15 +11,15 @@ export function createServer() {
   // Middleware
   const corsOptions = {
     origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: "*",
+    allowedHeaders: "*",
   } as const;
   app.use(cors(corsOptions));
   app.options(/.*/, cors(corsOptions));
   app.use((_, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.setHeader("Access-Control-Allow-Methods", "*");
+    res.setHeader("Access-Control-Allow-Headers", "*");
     next();
   });
   app.use(express.json({ limit: "16mb" }));
@@ -36,6 +36,10 @@ export function createServer() {
     res.json({ message: ping });
   });
 
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "API Running" });
+  });
+
   app.get("/api/demo", handleDemo);
 
   // Proxy to external PDF question generation API
@@ -44,6 +48,12 @@ export function createServer() {
   // Universal proxy endpoint (CORS + POST forward). Register both paths for serverless base path quirks
   app.all("/api/proxy", handleProxy);
   app.all("/proxy", handleProxy);
+
+  // Global error handler
+  app.use((err: any, _req: any, res: any, _next: any) => {
+    const message = err?.message || "Internal Server Error";
+    res.status(500).json({ error: true, message });
+  });
 
   return app;
 }

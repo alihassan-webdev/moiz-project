@@ -2,8 +2,11 @@ import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 
 type ApiResult = string;
+
+const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
 export default function Index() {
   const [file, setFile] = useState<File | null>(null);
@@ -22,6 +25,13 @@ export default function Index() {
     if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) {
       setError("Please upload a valid PDF file.");
       setFile(null);
+      toast({ title: "Invalid file", description: "Only PDF files are supported." });
+      return;
+    }
+    if (f.size > MAX_SIZE) {
+      setError("PDF exceeds 15MB limit.");
+      setFile(null);
+      toast({ title: "File too large", description: "Please upload a PDF up to 15MB." });
       return;
     }
     setError(null);
@@ -32,23 +42,51 @@ export default function Index() {
     e.preventDefault();
     setError(null);
     setResult(null);
-    if (!file) return setError("Attach a PDF file first.");
-    if (!query.trim()) return setError("Enter a query.");
+    if (!file) {
+      setError("Attach a PDF file first.");
+      toast({ title: "Missing PDF", description: "Attach a PDF to continue." });
+      return;
+    }
+    const q = query.trim();
+    if (!q) {
+      setError("Enter a query.");
+      toast({ title: "Missing query", description: "Write what to generate." });
+      return;
+    }
+
+    const send = async (timeoutMs: number) => {
+      const controller = new AbortController();
+      const t = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        const form = new FormData();
+        form.append("pdf", file);
+        form.append("query", q);
+        const res = await fetch("/api/generate-questions", {
+          method: "POST",
+          body: form,
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+          keepalive: true,
+        });
+        return res;
+      } finally {
+        clearTimeout(t);
+      }
+    };
 
     try {
       setLoading(true);
-      const form = new FormData();
-      form.append("pdf", file);
-      form.append("query", query);
+      let res = await send(18_000);
+      if (!res.ok || res.status === 504) {
+        // One quick retry
+        await new Promise((r) => setTimeout(r, 800));
+        res = await send(22_000);
+      }
 
-      const res = await fetch("/api/generate-questions", {
-        method: "POST",
-        body: form,
-      });
       const contentType = res.headers.get("content-type") || "";
       if (!res.ok) {
         const detail = await res.text();
-        throw new Error(detail);
+        throw new Error(detail || `HTTP ${res.status}`);
       }
       if (contentType.includes("application/json")) {
         const json = await res.json();
@@ -61,7 +99,9 @@ export default function Index() {
         setResult(text);
       }
     } catch (err: any) {
-      setError(err?.message || "Request failed");
+      const msg = err?.name === "AbortError" ? "Request timed out. Please try again." : err?.message || "Request failed";
+      setError(msg);
+      toast({ title: "Request failed", description: msg });
     } finally {
       setLoading(false);
     }

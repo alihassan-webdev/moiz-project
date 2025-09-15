@@ -34,11 +34,39 @@ function AnimatedRoutes() {
     <AppLayout>
       <AnimatePresence initial={false}>
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
-          <Route path="/generate" element={<PageWrapper><Generate /></PageWrapper>} />
-          <Route path="/settings" element={<PageWrapper><Settings /></PageWrapper>} />
+          <Route
+            path="/"
+            element={
+              <PageWrapper>
+                <Index />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/generate"
+            element={
+              <PageWrapper>
+                <Generate />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <PageWrapper>
+                <Settings />
+              </PageWrapper>
+            }
+          />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<PageWrapper><NotFound /></PageWrapper>} />
+          <Route
+            path="*"
+            element={
+              <PageWrapper>
+                <NotFound />
+              </PageWrapper>
+            }
+          />
         </Routes>
       </AnimatePresence>
     </AppLayout>

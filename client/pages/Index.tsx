@@ -51,16 +51,25 @@ export default function Index() {
   }, []);
 
   const handleFile = (f: File) => {
-    if (f.type !== "application/pdf" && !f.name.toLowerCase().endsWith(".pdf")) {
+    if (
+      f.type !== "application/pdf" &&
+      !f.name.toLowerCase().endsWith(".pdf")
+    ) {
       setError("Please upload a valid PDF file.");
       setFile(null);
-      toast({ title: "Invalid file", description: "Only PDF files are supported." });
+      toast({
+        title: "Invalid file",
+        description: "Only PDF files are supported.",
+      });
       return;
     }
     if (f.size > MAX_SIZE) {
       setError("PDF exceeds 15MB limit.");
       setFile(null);
-      toast({ title: "File too large", description: "Please upload a PDF up to 15MB." });
+      toast({
+        title: "File too large",
+        description: "Please upload a PDF up to 15MB.",
+      });
       return;
     }
     setError(null);
@@ -127,16 +136,23 @@ export default function Index() {
       }
       if (contentType.includes("application/json")) {
         const json = await res.json();
-        const text = typeof json === "string"
-          ? json
-          : json?.questions ?? json?.result ?? json?.message ?? JSON.stringify(json, null, 2);
+        const text =
+          typeof json === "string"
+            ? json
+            : (json?.questions ??
+              json?.result ??
+              json?.message ??
+              JSON.stringify(json, null, 2));
         setResult(String(text));
       } else {
         const text = await res.text();
         setResult(text);
       }
     } catch (err: any) {
-      const msg = err?.name === "AbortError" ? "Request timed out. Please try again." : err?.message || "Request failed";
+      const msg =
+        err?.name === "AbortError"
+          ? "Request timed out. Please try again."
+          : err?.message || "Request failed";
       setError(msg);
       toast({ title: "Request failed", description: msg });
     } finally {
@@ -168,7 +184,9 @@ export default function Index() {
               onDragOver={(e) => e.preventDefault()}
               className={cn(
                 "group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 text-center transition-colors",
-                file ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/60",
+                file
+                  ? "border-primary bg-primary/5"
+                  : "border-muted-foreground/30 hover:border-primary/60",
               )}
             >
               <input
@@ -233,7 +251,9 @@ export default function Index() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-lg font-semibold">Response</h3>
-                <p className="text-sm text-muted-foreground">Results from your latest request</p>
+                <p className="text-sm text-muted-foreground">
+                  Results from your latest request
+                </p>
               </div>
               <div className="flex items-center gap-2">
                 <Button
@@ -246,9 +266,15 @@ export default function Index() {
                     if (!result) return;
                     try {
                       await navigator.clipboard.writeText(result);
-                      toast({ title: "Copied", description: "Response copied to clipboard." });
+                      toast({
+                        title: "Copied",
+                        description: "Response copied to clipboard.",
+                      });
                     } catch {
-                      toast({ title: "Copy failed", description: "Select and copy manually." });
+                      toast({
+                        title: "Copy failed",
+                        description: "Select and copy manually.",
+                      });
                     }
                   }}
                 >
@@ -263,7 +289,9 @@ export default function Index() {
                   disabled={!result || loading}
                   onClick={() => {
                     if (!result) return;
-                    const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+                    const blob = new Blob([result], {
+                      type: "text/plain;charset=utf-8",
+                    });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement("a");
                     a.href = url;
@@ -281,13 +309,28 @@ export default function Index() {
             </div>
             <div className="mt-4 max-h-[420px] overflow-auto rounded-md border bg-background p-4 text-sm">
               {!result && !loading && (
-                <p className="text-muted-foreground">No result yet. Submit the form to see the output.</p>
+                <p className="text-muted-foreground">
+                  No result yet. Submit the form to see the output.
+                </p>
               )}
               {loading && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
-                    <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" className="opacity-75" />
+                    <circle
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                      className="opacity-25"
+                    />
+                    <path
+                      d="M22 12a10 10 0 0 1-10 10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      className="opacity-75"
+                    />
                   </svg>
                   Generating...
                 </div>

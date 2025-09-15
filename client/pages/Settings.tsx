@@ -37,7 +37,10 @@ export default function Settings() {
 
   const save = () => {
     if (settings.initialTimeoutMs < 5000 || settings.retryTimeoutMs < 5000) {
-      toast({ title: "Invalid timeout", description: "Timeouts must be at least 5000 ms." });
+      toast({
+        title: "Invalid timeout",
+        description: "Timeouts must be at least 5000 ms.",
+      });
       return;
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
@@ -54,7 +57,9 @@ export default function Settings() {
     <div className="mx-auto max-w-2xl space-y-8">
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
-        <p className="text-sm text-muted-foreground">Control timeouts and defaults for generation.</p>
+        <p className="text-sm text-muted-foreground">
+          Control timeouts and defaults for generation.
+        </p>
       </div>
 
       <div className="space-y-6 rounded-xl border bg-card p-6">
@@ -65,7 +70,12 @@ export default function Settings() {
             type="number"
             min={5000}
             value={settings.initialTimeoutMs}
-            onChange={(e) => setSettings((s) => ({ ...s, initialTimeoutMs: Number(e.target.value) }))}
+            onChange={(e) =>
+              setSettings((s) => ({
+                ...s,
+                initialTimeoutMs: Number(e.target.value),
+              }))
+            }
           />
         </div>
 
@@ -76,19 +86,28 @@ export default function Settings() {
             type="number"
             min={5000}
             value={settings.retryTimeoutMs}
-            onChange={(e) => setSettings((s) => ({ ...s, retryTimeoutMs: Number(e.target.value) }))}
+            onChange={(e) =>
+              setSettings((s) => ({
+                ...s,
+                retryTimeoutMs: Number(e.target.value),
+              }))
+            }
           />
         </div>
 
         <div className="flex items-center justify-between rounded-lg border p-3">
           <div>
             <Label htmlFor="autoRetry">Auto retry on timeout</Label>
-            <p className="text-xs text-muted-foreground">When enabled, the app retries once if the first request times out.</p>
+            <p className="text-xs text-muted-foreground">
+              When enabled, the app retries once if the first request times out.
+            </p>
           </div>
           <Switch
             id="autoRetry"
             checked={settings.autoRetry}
-            onCheckedChange={(v) => setSettings((s) => ({ ...s, autoRetry: v }))}
+            onCheckedChange={(v) =>
+              setSettings((s) => ({ ...s, autoRetry: v }))
+            }
           />
         </div>
 
@@ -99,13 +118,17 @@ export default function Settings() {
             rows={4}
             placeholder="e.g. Generate 10 multiple-choice questions covering key concepts"
             value={settings.defaultQuery}
-            onChange={(e) => setSettings((s) => ({ ...s, defaultQuery: e.target.value }))}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, defaultQuery: e.target.value }))
+            }
           />
         </div>
 
         <div className="flex items-center gap-3">
           <Button onClick={save}>Save</Button>
-          <Button variant="outline" onClick={reset}>Reset</Button>
+          <Button variant="outline" onClick={reset}>
+            Reset
+          </Button>
         </div>
       </div>
     </div>

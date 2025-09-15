@@ -9,7 +9,8 @@ const upload = multer({
   },
 });
 
-const EXTERNAL_API = "https://api-va5v.onrender.com/generate-questions" as const;
+const EXTERNAL_API =
+  "https://api-va5v.onrender.com/generate-questions" as const;
 
 const CACHE_TTL_MS = 5 * 60_000;
 const cache = new Map<string, { ts: number; json?: any; text?: string }>();
@@ -24,16 +25,25 @@ export const handleGenerate: RequestHandler = async (req, res) => {
   try {
     const body = req.body as Record<string, string>;
 
-    const files = req.files as Record<string, Express.Multer.File[]> | undefined;
-    const file: Express.Multer.File | undefined = files?.pdf?.[0] || files?.file?.[0];
+    const files = req.files as
+      | Record<string, Express.Multer.File[]>
+      | undefined;
+    const file: Express.Multer.File | undefined =
+      files?.pdf?.[0] || files?.file?.[0];
 
     if (!file) {
-      return res.status(400).json({ error: "Missing PDF file. Use 'pdf' field." });
+      return res
+        .status(400)
+        .json({ error: "Missing PDF file. Use 'pdf' field." });
     }
 
     const query = (body?.query ?? body?.q ?? "").toString();
 
-    const key = createHash("sha256").update(file.buffer).update("|").update(query).digest("hex");
+    const key = createHash("sha256")
+      .update(file.buffer)
+      .update("|")
+      .update(query)
+      .digest("hex");
     const cached = cache.get(key);
     if (cached && Date.now() - cached.ts < CACHE_TTL_MS) {
       if (cached.json !== undefined) {
@@ -43,7 +53,9 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     }
     const form = new FormData();
     const uint8 = new Uint8Array(file.buffer);
-    const blob = new Blob([uint8], { type: file.mimetype || "application/pdf" });
+    const blob = new Blob([uint8], {
+      type: file.mimetype || "application/pdf",
+    });
     // Append only once to avoid duplicating payload size
     form.append("pdf", blob, file.originalname || "document.pdf");
     if (query) form.append("query", query);
@@ -66,7 +78,9 @@ export const handleGenerate: RequestHandler = async (req, res) => {
 
     if (!upstream.ok) {
       const errText = await upstream.text().catch(() => upstream.statusText);
-      return res.status(upstream.status).json({ error: "Upstream error", detail: errText });
+      return res
+        .status(upstream.status)
+        .json({ error: "Upstream error", detail: errText });
     }
 
     if (contentType.includes("application/json")) {
@@ -83,6 +97,11 @@ export const handleGenerate: RequestHandler = async (req, res) => {
     if (err?.name === "AbortError") {
       return res.status(504).json({ error: "Upstream timeout" });
     }
-    return res.status(500).json({ error: "Internal server error", detail: err?.message || String(err) });
+    return res
+      .status(500)
+      .json({
+        error: "Internal server error",
+        detail: err?.message || String(err),
+      });
   }
 };

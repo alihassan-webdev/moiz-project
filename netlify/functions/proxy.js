@@ -1,11 +1,11 @@
-export async function handler(event, context) {
+exports.handler = async function (event, context) {
   const EXTERNAL = process.env.PREDICT_ENDPOINT || "https://api-va5v.onrender.com/generate-questions";
 
   // Build upstream URL including query string
   const url = new URL(EXTERNAL);
   if (event.queryStringParameters) {
     for (const [k, v] of Object.entries(event.queryStringParameters)) {
-      if (v != null) url.searchParams.set(k, v);
+      if (v != null) url.searchParams.set(k, v as string);
     }
   }
 
@@ -13,7 +13,6 @@ export async function handler(event, context) {
   const headers = { ...(event.headers || {}) };
   // Remove host header to avoid issues
   delete headers.host;
-  // Netlify may send content-type for base64 body differently; keep what client sent
 
   // Decode body if base64 encoded
   let body = event.body || null;
@@ -28,15 +27,16 @@ export async function handler(event, context) {
     const resp = await fetch(url.toString(), {
       method: event.httpMethod || "GET",
       headers,
-      body: body as any,
+      body: body,
       signal: controller.signal,
     });
 
     const contentType = resp.headers.get("content-type") || "application/octet-stream";
-    const buffer = await resp.arrayBuffer();
+    const arrayBuffer = await resp.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     const isText = contentType.includes("application/json") || contentType.startsWith("text/");
 
-    const responseBody = isText ? new TextDecoder().decode(buffer) : Buffer.from(buffer).toString("base64");
+    const responseBody = isText ? buffer.toString("utf-8") : buffer.toString("base64");
 
     const responseHeaders = {
       "Access-Control-Allow-Origin": "*",
@@ -52,7 +52,7 @@ export async function handler(event, context) {
       isBase64Encoded: !isText,
     };
   } catch (err) {
-    if (err?.name === "AbortError") {
+    if (err && err.name === "AbortError") {
       return {
         statusCode: 504,
         headers: { "Access-Control-Allow-Origin": "*" },
@@ -67,4 +67,4 @@ export async function handler(event, context) {
   } finally {
     clearTimeout(timeout);
   }
-}
+};

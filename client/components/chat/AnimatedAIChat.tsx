@@ -96,13 +96,10 @@ const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       <div className={cn("relative", containerClassName)}>
         <textarea
           className={cn(
-            "border-input bg-background flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm",
-            "transition-all duration-200 ease-in-out",
+            "bg-background flex min-h-[80px] w-full rounded-md px-3 py-2 text-sm",
             "placeholder:text-muted-foreground",
             "disabled:cursor-not-allowed disabled:opacity-50",
-            showRing
-              ? "focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:outline-none"
-              : "",
+            "outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-transparent",
             className,
           )}
           ref={ref}

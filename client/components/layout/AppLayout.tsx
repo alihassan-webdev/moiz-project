@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { FileText, Home, Settings } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
 export function AppLayout({ children }: PropsWithChildren) {
@@ -34,28 +34,28 @@ export function AppLayout({ children }: PropsWithChildren) {
       <div className="group/sidebar-wrapper flex min-h-svh w-full">
         <Sidebar collapsible="icon">
           <SidebarHeader>
-            <a href="/" className="flex items-center gap-2 px-3 py-2">
+            <Link to="/" className="flex items-center gap-2 px-3 py-2">
               <div className="h-8 w-8 rounded-md bg-gradient-to-br from-primary to-fuchsia-500" />
               <span className="font-semibold tracking-tight">Admin</span>
-            </a>
+            </Link>
           </SidebarHeader>
           <SidebarContent>
             <nav className="px-2">
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path === "/"}>
-                    <a href="/">
+                    <Link to="/">
                       <Home />
                       <span>Dashboard</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path === "/generate"}>
-                    <a href="/generate">
+                    <Link to="/generate">
                       <FileText />
                       <span>Generate</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -63,10 +63,10 @@ export function AppLayout({ children }: PropsWithChildren) {
               <SidebarMenu>
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={path === "/settings"}>
-                    <a href="/settings">
+                    <Link to="/settings">
                       <Settings />
                       <span>Settings</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

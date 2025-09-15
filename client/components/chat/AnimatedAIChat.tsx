@@ -23,6 +23,8 @@ type Props = {
     query: string;
   }) => Promise<void> | void;
   loading?: boolean;
+  result?: string | null;
+  query?: string;
 };
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
@@ -131,7 +133,7 @@ const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 );
 InnerTextarea.displayName = "Textarea";
 
-export default function AnimatedAIChat({ onSubmit, loading }: Props) {
+export default function AnimatedAIChat({ onSubmit, loading, result, query }: Props) {
   const [value, setValue] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -400,6 +402,65 @@ export default function AnimatedAIChat({ onSubmit, loading }: Props) {
                   </motion.div>
                 )}
               </AnimatePresence>
+
+              {(loading || !!result) && (
+                <div className="px-4 pb-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-semibold">Response</h3>
+                      <p className="text-xs text-muted-foreground">Results from your latest request</p>
+                    </div>
+                    <button
+                      type="button"
+                      aria-label="Download"
+                      disabled={!result || !!loading}
+                      onClick={() => {
+                        if (!result) return;
+                        const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        const safeQuery = (query || "")
+                          .trim()
+                          .slice(0, 50)
+                          .replace(/[^a-z0-9_-]/gi, "_") || "questions";
+                        const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                      }}
+                      className={cn(
+                        "inline-flex items-center justify-center rounded-md p-2",
+                        "bg-muted/40 text-muted-foreground hover:bg-muted/60",
+                        (!result || loading) && "opacity-60",
+                      )}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-4 w-4">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      <span className="sr-only">Download</span>
+                    </button>
+                  </div>
+                  <div className="mt-2 max-h-[420px] overflow-auto rounded-md bg-background p-3 text-sm scrollbar-yellow">
+                    {loading && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                          <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" className="opacity-75" />
+                        </svg>
+                        Generating...
+                      </div>
+                    )}
+                    {!!result && !loading && (
+                      <pre className="whitespace-pre-wrap break-words text-foreground">{result}</pre>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
                 <div className="flex items-center gap-3">

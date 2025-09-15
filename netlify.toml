@@ -1,8 +1,14 @@
 [build]
   command = "npm run build"
+  functions = "netlify/functions"
   publish = "dist"
 
-# SPA fallback so deep links work
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/proxy/:splat"
+  status = 200
+
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"

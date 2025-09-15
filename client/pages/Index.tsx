@@ -311,7 +311,7 @@ export default function Index() {
               <div className="mt-4 max-h-[420px] overflow-auto rounded-md bg-background p-4 text-sm scrollbar-yellow">
                 {!result && !loading && (
                   <p className="text-muted-foreground">
-                    No result yet. Submit the form to see the output.
+                    No result yet. Submit to see the output.
                   </p>
                 )}
                 {loading && (

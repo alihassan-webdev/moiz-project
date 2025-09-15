@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import AnimatedAIChat from "@/components/chat/AnimatedAIChat";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Copy, Download } from "lucide-react";

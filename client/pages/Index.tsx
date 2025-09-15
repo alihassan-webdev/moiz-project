@@ -21,9 +21,8 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
-// Direct API endpoint used when serverless functions are unavailable (static deploys)
-const DIRECT_API_URL =
-  "https://api-va5v.onrender.com/generate-questions" as const;
+// API endpoint comes from environment
+const API_URL = (import.meta.env.VITE_PREDICT_ENDPOINT as string) || "";
 
 export default function Index() {
   const [file, setFile] = useState<File | null>(null);
@@ -155,39 +154,18 @@ export default function Index() {
 
       // 1) Prefer universal proxy endpoint (works on Express, Vercel, Netlify)
       try {
-        res = await sendTo("/api/proxy", settings.initialTimeoutMs);
+        if (!API_URL) {
+          throw new Error("Missing VITE_PREDICT_ENDPOINT in .env");
+        }
+        res = await sendTo(API_URL, settings.initialTimeoutMs);
       } catch (err: any) {
-        // Don't rethrow — treat as null so fallbacks run.
         toast({
           title: "Connection issue",
-          description: "Will try fallback endpoints.",
+          description: err?.message || "Check your API endpoint.",
         });
         res = null;
       }
 
-      // 2) Fallback to local express route if available
-      if (!res || !res.ok) {
-        await new Promise((r) => setTimeout(r, 200));
-        try {
-          res = await sendTo(
-            "/api/generate-questions",
-            settings.retryTimeoutMs,
-          );
-        } catch (err: any) {
-          res = null;
-        }
-      }
-
-      // 3) If still bad or HTML, go direct external API (requires CORS on remote)
-      const isBad =
-        !res ||
-        !res.ok ||
-        res.status === 404 ||
-        (res.headers?.get("content-type") || "").includes("text/html");
-      if (isBad) {
-        await new Promise((r) => setTimeout(r, 200));
-        res = await sendTo(DIRECT_API_URL, settings.retryTimeoutMs);
-      }
 
       if (!res) {
         throw new Error("Request timed out or was aborted");

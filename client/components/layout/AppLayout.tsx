@@ -73,7 +73,7 @@ export function AppLayout({ children }: PropsWithChildren) {
             <SidebarTrigger />
             <div className="font-semibold">Dashboard</div>
             <div className="ml-auto flex items-center gap-2">
-              <Button asChild variant="secondary" size="icon" aria-label="Settings">
+              <Button asChild variant="secondary" size="icon" aria-label="Settings" className="md:hidden">
                 <Link to="/settings">
                   <Settings />
                 </Link>

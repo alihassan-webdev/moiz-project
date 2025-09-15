@@ -229,7 +229,7 @@ export default function Index() {
         <div className="absolute inset-0 bg-background -z-10" />
         <div className="relative mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl text-secondary drop-shadow-md">
-            Upload your PDF and generate exam-ready questions
+            Test paper generater
           </h1>
           <p className="mt-3 text-sm text-white/90">
             Fast, accurate question generation tailored to your query.

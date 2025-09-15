@@ -246,32 +246,14 @@ export default function Index() {
         </div>
       </section>
 
-      <section className="mx-auto mt-10 grid max-w-5xl gap-8 md:grid-cols-5">
-        <div className="md:col-span-3 space-y-4">
-          {error && (
-            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
-              {error}
-            </div>
-          )}
-          <AnimatedAIChat
-            loading={loading}
-            onSubmit={async ({ file: f, query: q }) => {
-              if (f) setFile(f);
-              setQuery(q);
-              await runSubmit(f, q);
-            }}
-          />
-        </div>
-
-        <div className="md:col-span-2">
-          <div className="sticky top-24">
-            <div className="card-surface p-5">
+      <section className="mx-auto mt-10 max-w-5xl space-y-6">
+        <div>
+          <div>
+            <div className="border-border bg-card/80 relative rounded-2xl border p-5 shadow-2xl backdrop-blur-2xl">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className="text-lg font-semibold">Response</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Results from your latest request
-                  </p>
+                  <p className="text-sm text-muted-foreground">Results from your latest request</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -282,23 +264,16 @@ export default function Index() {
                     disabled={!result || loading}
                     onClick={() => {
                       if (!result) return;
-                      const blob = new Blob([result], {
-                        type: "text/plain;charset=utf-8",
-                      });
+                      const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
                       const url = URL.createObjectURL(blob);
                       const a = document.createElement("a");
                       a.href = url;
-                      const safeQuery =
-                        (query || "")
-                          .trim()
-                          .slice(0, 50)
-                          .replace(/[^a-z0-9_-]/gi, "_") || "questions";
+                      const safeQuery = (query || "").trim().slice(0, 50).replace(/[^a-z0-9_-]/gi, "_") || "questions";
                       const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
                       a.download = filename;
                       document.body.appendChild(a);
                       a.click();
                       a.remove();
-                      // Delay revoke slightly to ensure download is initiated in all browsers
                       setTimeout(() => URL.revokeObjectURL(url), 1000);
                     }}
                   >
@@ -308,42 +283,35 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="mt-4 max-h-[420px] overflow-auto rounded-md bg-background p-4 text-sm scrollbar-yellow">
-                {!result && !loading && (
-                  <p className="text-muted-foreground">
-                    No result yet. Submit to see the output.
-                  </p>
-                )}
+              <div className="mt-4 max-h-[520px] overflow-auto rounded-md bg-background p-4 text-sm scrollbar-yellow">
+                {!result && !loading && <p className="text-muted-foreground">No result yet. Submit to see the output.</p>}
                 {loading && (
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                      <circle
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        fill="none"
-                        className="opacity-25"
-                      />
-                      <path
-                        d="M22 12a10 10 0 0 1-10 10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                        className="opacity-75"
-                      />
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
+                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" className="opacity-75" />
                     </svg>
                     Generating...
                   </div>
                 )}
-                {!!result && !loading && (
-                  <pre className="whitespace-pre-wrap break-words text-foreground">
-                    {result}
-                  </pre>
-                )}
+                {!!result && !loading && <pre className="whitespace-pre-wrap break-words text-foreground">{result}</pre>}
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="space-y-4">
+          {error && (
+            <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">{error}</div>
+          )}
+          <AnimatedAIChat
+            loading={loading}
+            onSubmit={async ({ file: f, query: q }) => {
+              if (f) setFile(f);
+              setQuery(q);
+              await runSubmit(f, q);
+            }}
+          />
         </div>
       </section>
     </div>

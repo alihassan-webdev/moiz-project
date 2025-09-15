@@ -1,5 +1,6 @@
 import "./global.css";
 
+import { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { createRoot } from "react-dom/client";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -58,22 +59,6 @@ function AnimatedRoutes() {
         <AppLayout>
           <AnimatePresence initial={false} mode="wait">
             <Routes location={location} key={location.pathname}>
-          <Route
-            path="/"
-            element={
-              <PageWrapper>
-                <Index />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/settings"
-            element={
-              <PageWrapper>
-                <Settings />
-              </PageWrapper>
-            }
-          />
               <Route
                 path="/"
                 element={

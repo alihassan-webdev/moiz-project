@@ -124,12 +124,12 @@ export default function Index() {
       const t = setTimeout(() => controller.abort(new Error("timeout")), timeoutMs);
 
       try {
+        console.debug("Attempting fetch:", finalUrl, { isExternal });
         const res = await fetch(finalUrl, {
           method: "POST",
           body: form,
           signal: controller.signal,
           headers: { Accept: "application/json" },
-          // CORS-friendly defaults for external endpoints
           ...(isExternal
             ? {
                 mode: "cors" as const,
@@ -140,14 +140,14 @@ export default function Index() {
         });
         return res;
       } catch (err: any) {
-        // Normalize all fetch errors (including AbortError) to null so callers can
-        // handle retries/fallbacks without uncaught exceptions.
         try {
           if (err?.name === "AbortError") {
-            // provide clearer message in console for debugging
             console.warn("Fetch aborted:", finalUrl, err?.message ?? err);
+          } else if (err?.message === "Failed to fetch" || err?.name === "TypeError") {
+            // Likely network or CORS
+            console.warn("Network or CORS error when fetching:", finalUrl, err?.message ?? err);
           } else {
-            console.warn("Fetch failed:", finalUrl, err?.message ?? err);
+            console.warn("Fetch error:", finalUrl, err?.message ?? err);
           }
         } catch {}
         return null;

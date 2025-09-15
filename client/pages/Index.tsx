@@ -248,6 +248,7 @@ export default function Index() {
             loading={loading}
             result={result}
             query={query}
+            onReset={onReset}
             onSubmit={async ({ file: f, query: q }) => {
               if (f) setFile(f);
               setQuery(q);

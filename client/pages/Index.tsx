@@ -195,6 +195,9 @@ export default function Index() {
       if (!res) {
         const proxies = ["/.netlify/functions/proxy", "/api/proxy"]; // netlify, vercel
         for (const proxyPath of proxies) {
+          // check if proxy path is reachable before sending large multipart payload
+          const ok = await checkEndpoint(proxyPath, 2500).catch(() => false);
+          if (!ok) continue;
           try {
             res = await sendTo(proxyPath, settings.retryTimeoutMs);
             if (res) break;
@@ -205,7 +208,10 @@ export default function Index() {
       }
 
       if (!res) {
-        throw new Error("Request timed out or was aborted");
+        // If we get here, it likely failed due to CORS or network. Provide a helpful error.
+        throw new Error(
+          "Network or CORS error. If deployed on Netlify set VITE_PREDICT_ENDPOINT='/.netlify/functions/proxy' and PREDICT_ENDPOINT='https://api-va5v.onrender.com', or on Vercel set VITE_PREDICT_ENDPOINT='/api/proxy' and PREDICT_ENDPOINT='https://api-va5v.onrender.com'. Alternatively, enable CORS on the API."
+        );
       }
 
       const contentType = res.headers.get("content-type") || "";

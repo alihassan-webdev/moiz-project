@@ -41,8 +41,8 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center">
-      <div className="w-full max-w-md rounded-xl border bg-card p-6 card-surface">
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="w-full max-w-lg rounded-xl border bg-card p-8 sm:p-10 card-surface">
         <div className="mb-6 text-center">
           <h1 className="text-2xl font-semibold text-secondary">Log in</h1>
           <p className="text-sm text-muted-foreground">Demo access only. Use demo@demo.com / demo123</p>
@@ -57,6 +57,7 @@ export default function Login() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
+              className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
             />
           </div>
           <div className="grid gap-2">
@@ -68,6 +69,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
+              className="focus-visible:ring-secondary focus-visible:border-secondary focus:border-secondary"
             />
           </div>
           <Button type="submit" className="w-full" variant="secondary" disabled={loading}>

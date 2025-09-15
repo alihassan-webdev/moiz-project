@@ -174,13 +174,16 @@ export default function Index() {
         res = null;
       }
 
-      // If direct request failed (CORS or network), try Netlify function proxy if available
+      // If direct request failed (CORS or network), try Netlify function proxy then /api/proxy (Vercel)
       if (!res) {
-        try {
-          const proxyPath = "/.netlify/functions/proxy";
-          res = await sendTo(proxyPath, settings.retryTimeoutMs);
-        } catch (err) {
-          res = null;
+        const proxies = ["/.netlify/functions/proxy", "/api/proxy"]; // netlify, vercel
+        for (const proxyPath of proxies) {
+          try {
+            res = await sendTo(proxyPath, settings.retryTimeoutMs);
+            if (res) break;
+          } catch (err) {
+            res = null;
+          }
         }
       }
 

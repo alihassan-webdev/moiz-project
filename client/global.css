@@ -155,6 +155,19 @@
   transition: background-color 9999s ease-out 0s;
 }
 
+/* Hide number input spinners globally */
+@layer base {
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+}
+
 /* Hide global scrollbars but keep scrolling */
 @layer base {
   html,

@@ -20,7 +20,7 @@ function PageWrapper({ children }: { children: React.ReactNode }) {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.18, ease: "easeOut" }}
-      className="min-h-[60vh]"
+      className="min-h-[60vh] bg-background"
     >
       {children}
     </motion.div>
@@ -31,7 +31,7 @@ function AnimatedRoutes() {
   const location = useLocation();
   return (
     <AppLayout>
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route
             path="/"

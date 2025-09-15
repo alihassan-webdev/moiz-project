@@ -17,10 +17,10 @@ const queryClient = new QueryClient();
 function PageWrapper({ children }: { children: React.ReactNode }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -6 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18, ease: "easeOut" }}
       className="min-h-[60vh]"
     >
       {children}
@@ -32,7 +32,7 @@ function AnimatedRoutes() {
   const location = useLocation();
   return (
     <AppLayout>
-      <AnimatePresence mode="wait">
+      <AnimatePresence initial={false}>
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<PageWrapper><Index /></PageWrapper>} />
           <Route path="/generate" element={<PageWrapper><Generate /></PageWrapper>} />

@@ -27,13 +27,13 @@ export default defineConfig(({ mode }) => ({
         path.resolve(__dirname, "client"),
         path.resolve(__dirname, "shared"),
       ],
-      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "server/**"],
+      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
     },
   },
   build: {
     outDir: "dist",
   },
-  plugins: [react(), expressPlugin()],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client"),
@@ -41,14 +41,3 @@ export default defineConfig(({ mode }) => ({
     },
   },
 }));
-
-function expressPlugin(): Plugin {
-  return {
-    name: "express-plugin",
-    apply: "serve", // only during dev
-    configureServer(server) {
-      const app = createServer();
-      server.middlewares.use(app); // add express middleware
-    },
-  };
-}

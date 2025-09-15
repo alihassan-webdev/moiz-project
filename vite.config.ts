@@ -29,6 +29,15 @@ export default defineConfig(({ mode }) => ({
       ],
       deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
     },
+    proxy: {
+      // Proxy the Netlify function path to the external API during local dev to avoid CORS
+      "/.netlify/functions/proxy": {
+        target: process.env.PREDICT_ENDPOINT || "https://api-va5v.onrender.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace("/.netlify/functions/proxy", "/generate-questions"),
+      },
+    },
   },
   build: {
     outDir: "dist",

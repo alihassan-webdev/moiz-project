@@ -76,11 +76,21 @@ export default function Index() {
 
     try {
       setLoading(true);
-      let res = await send(18_000);
-      if (!res.ok || res.status === 504) {
-        // One quick retry
-        await new Promise((r) => setTimeout(r, 800));
-        res = await send(22_000);
+      let res: Response | null = null;
+
+      try {
+        res = await send(12_000);
+      } catch (err: any) {
+        if (err?.name === "AbortError") {
+          toast({ title: "Slow connection", description: "Retrying..." });
+        } else {
+          throw err;
+        }
+      }
+
+      if (!res || !res.ok || res.status === 504) {
+        await new Promise((r) => setTimeout(r, 600));
+        res = await send(20_000);
       }
 
       const contentType = res.headers.get("content-type") || "";

@@ -92,27 +92,28 @@ export default function Index() {
     }
 
     const send = async (timeoutMs: number) => {
+      const form = new FormData();
+      form.append("pdf", file);
+      form.append("query", q);
+
       const controller = new AbortController();
       const t = setTimeout(() => controller.abort(), timeoutMs);
+
       try {
-        const form = new FormData();
-        form.append("pdf", file);
-        form.append("query", q);
-        try {
-          const res = await fetch("/api/generate-questions", {
-            method: "POST",
-            body: form,
-            signal: controller.signal,
-            headers: { Accept: "application/json" },
-          });
-          return res;
-        } catch (err: any) {
-          // Normalize AbortError to a null response so callers can handle retries
-          if (err?.name === "AbortError") {
-            return null;
-          }
-          throw err;
+        const res = await fetch("/api/generate-questions", {
+          method: "POST",
+          body: form,
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+        });
+        return res;
+      } catch (err: any) {
+        // Normalize abort-like errors to a null response so callers can handle retries
+        const msg = String(err?.message || "").toLowerCase();
+        if (err?.name === "AbortError" || msg.includes("signal is aborted") || msg.includes("aborted")) {
+          return null;
         }
+        throw err;
       } finally {
         clearTimeout(t);
       }

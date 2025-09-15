@@ -194,9 +194,50 @@ export default function Index() {
 
         <div className="md:col-span-2">
           <div className="sticky top-24 rounded-xl border bg-card p-5 shadow-sm">
-            <h3 className="text-lg font-semibold">Response</h3>
-            <p className="mb-4 text-sm text-muted-foreground">Results from your latest request</p>
-            <div className="max-h-[420px] overflow-auto rounded-md border bg-background p-4 text-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold">Response</h3>
+                <p className="text-sm text-muted-foreground">Results from your latest request</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  disabled={!result || loading}
+                  onClick={async () => {
+                    if (!result) return;
+                    try {
+                      await navigator.clipboard.writeText(result);
+                      toast({ title: "Copied", description: "Response copied to clipboard." });
+                    } catch {
+                      toast({ title: "Copy failed", description: "Select and copy manually." });
+                    }
+                  }}
+                >
+                  Copy
+                </Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!result || loading}
+                  onClick={() => {
+                    if (!result) return;
+                    const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "questions.txt";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  }}
+                >
+                  Download
+                </Button>
+              </div>
+            </div>
+            <div className="mt-4 max-h-[420px] overflow-auto rounded-md border bg-background p-4 text-sm">
               {!result && !loading && (
                 <p className="text-muted-foreground">No result yet. Submit the form to see the output.</p>
               )}

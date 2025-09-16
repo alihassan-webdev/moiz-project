@@ -216,6 +216,12 @@ function ExternalPdfSelector({
             const subjectName = found
               ? found.name.replace(/\.pdf$/i, "")
               : selectedSubjectPath || "";
+            if (totalMarks == null) {
+              return toast({
+                title: "Enter total marks",
+                description: "Please enter a value between 20 and 100.",
+              });
+            }
             const generated = buildPaperSchemePrompt(
               subjectName,
               selectedClass || "",

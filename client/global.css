@@ -182,32 +182,29 @@
   }
 }
 
-/* Yellow side and bottom shadow for cards */
+/* Yellow side and bottom shadow for cards (no top glow) */
 .card-yellow-shadow {
   position: relative;
-  box-shadow:
-    -6px 0 18px hsl(var(--secondary) / 0.35), /* left */
-    6px 0 18px hsl(var(--secondary) / 0.35),  /* right */
-    0 18px 36px hsl(var(--secondary) / 0.50); /* bottom */
   border-radius: var(--radius);
 }
-/* Mask any residual top glow */
-.card-yellow-shadow::before {
+.card-yellow-shadow::after {
   content: "";
   position: absolute;
-  top: -8px;
   left: 0;
   right: 0;
-  height: 8px;
-  background: hsl(var(--background));
+  top: 8px;          /* start below top to avoid any top spill */
+  bottom: -8px;      /* extend a bit to enhance bottom drop */
   pointer-events: none;
-  border-top-left-radius: var(--radius);
-  border-top-right-radius: var(--radius);
-}
-.card-yellow-shadow:hover {
+  border-radius: inherit;
   box-shadow:
-    -8px 0 22px hsl(var(--secondary) / 0.45),
-    8px 0 22px hsl(var(--secondary) / 0.45),
-    0 24px 48px hsl(var(--secondary) / 0.60);
+    -8px 0 22px hsl(var(--secondary) / 0.45),  /* left */
+    8px 0 22px hsl(var(--secondary) / 0.45),   /* right */
+    0 24px 48px hsl(var(--secondary) / 0.60);  /* bottom */
+}
+.card-yellow-shadow:hover::after {
+  box-shadow:
+    -10px 0 26px hsl(var(--secondary) / 0.55),
+    10px 0 26px hsl(var(--secondary) / 0.55),
+    0 28px 56px hsl(var(--secondary) / 0.68);
   transition: box-shadow 0.2s ease-in-out;
 }

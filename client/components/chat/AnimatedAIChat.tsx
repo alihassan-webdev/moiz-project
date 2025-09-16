@@ -444,14 +444,32 @@ export default function AnimatedAIChat({
                           doc.text('Test Paper Generator', pageWidth / 2, y, { align: 'center' });
                           y += 30;
 
-                          // Subtitle: show the user's prompt as "Here is your: <prompt>"
+                          // Build a concise summary line instead of echoing the prompt
+                          const promptText = (query || '').trim();
+                          // Try to extract counts from prompt or result
+                          let mcqCount: number | null = null;
+                          let fillCount: number | null = null;
+                          const mcqMatch = promptText.match(/(\d+)\s*(?:multiple[- ]choice|mcq)s?/i) || (result || '').match(/(\d+)\s*(?:multiple[- ]choice|mcq)s?/i);
+                          const fillMatch = promptText.match(/(\d+)\s*(?:fill[- ]in|fill-in|fill in|blank)s?/i) || (result || '').match(/(\d+)\s*(?:fill[- ]in|fill-in|fill in|blank)s?/i);
+                          if (mcqMatch) mcqCount = Number(mcqMatch[1]);
+                          if (fillMatch) fillCount = Number(fillMatch[1]);
+
+                          let summaryLine = '';
+                          if (mcqCount !== null && fillCount !== null) {
+                            summaryLine = `Here are ${mcqCount} multiple-choice questions (MCQs) and ${fillCount} fill-in-the-blank questions based on the provided PDF content:`;
+                          } else if (mcqCount !== null) {
+                            summaryLine = `Here are ${mcqCount} multiple-choice questions (MCQs) based on the provided PDF content:`;
+                          } else if (fillCount !== null) {
+                            summaryLine = `Here are ${fillCount} fill-in-the-blank questions based on the provided PDF content:`;
+                          } else {
+                            summaryLine = `Here are the questions based on the provided PDF content:`;
+                          }
+
                           doc.setFontSize(12);
                           doc.setFont('helvetica', 'normal');
-                          const promptText = (query || '');
-                          const promptDisplay = `Here is your: ${promptText}`;
-                          const promptLines = doc.splitTextToSize(promptDisplay, pageWidth - margin * 2);
-                          doc.text(promptLines, margin, y);
-                          y += promptLines.length * 14 + 8;
+                          const summaryLines = doc.splitTextToSize(summaryLine, pageWidth - margin * 2);
+                          doc.text(summaryLines, margin, y);
+                          y += summaryLines.length * 14 + 8;
 
                           doc.setDrawColor(200);
                           doc.setLineWidth(0.5);
@@ -462,11 +480,13 @@ export default function AnimatedAIChat({
                           const rawLines = (result || '').split(/\n/);
                           // If the first few lines of result echo the prompt, remove them
                           let startIndex = 0;
-                          if (rawLines.length > 0) {
+                          if (rawLines.length > 0 && promptText) {
                             const firstLine = rawLines[0].trim().toLowerCase();
-                            if (promptText && firstLine.includes(promptText.toLowerCase())) {
+                            if (firstLine.includes(promptText.toLowerCase())) {
                               startIndex = 1;
                             }
+                            // Also remove an immediately following empty line if present
+                            if (rawLines[startIndex] && rawLines[startIndex].trim() === '') startIndex++;
                           }
                           const lines = rawLines.slice(startIndex);
                           for (let i = 0; i < lines.length; i++) {

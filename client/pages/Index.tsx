@@ -37,9 +37,7 @@ const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 // API endpoint comes from environment; prefer Netlify dev proxy when running locally
 const API_URL =
   (import.meta.env.VITE_PREDICT_ENDPOINT as string) ||
-  (import.meta.env.DEV
-    ? "/.netlify/functions/proxy"
-    : "/api/generate-questions");
+  (import.meta.env.DEV ? "/.netlify/functions/proxy" : "/api/proxy");
 
 function ExternalPdfSelector({
   onLoadFile,
@@ -471,7 +469,12 @@ export default function Index() {
 
       // If direct request failed (CORS or network), try Netlify function proxy then /api/proxy (Vercel)
       if (!res) {
-        const proxies = ["/.netlify/functions/proxy", "/api/proxy", "/proxy"]; // netlify, vercel, server fallback
+        const proxies = [
+        "/.netlify/functions/proxy", // Netlify function proxy
+        "/api/proxy",               // Vercel function proxy
+        "/api/generate-questions",  // Node/Express route (server deploys)
+        "/proxy"                    // Express proxy fallback
+      ];
         for (const proxyPath of proxies) {
           // check if proxy path is reachable before sending large multipart payload
           const ok = await checkEndpoint(proxyPath, 2500).catch(() => false);

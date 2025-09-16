@@ -430,7 +430,99 @@ export default function Index() {
           />
 
           {result && (
-            <pre className="whitespace-pre-wrap mt-4 rounded-md bg-card/60 p-4 text-sm">{result}</pre>
+            <div className="mt-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold">Result</h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      if (!result) return;
+                      try {
+                        const { jsPDF } = await import("jspdf");
+                        const doc = new jsPDF({ unit: "pt", format: "a4" });
+                        const margin = 40;
+                        let y = 60;
+                        const pageWidth = doc.internal.pageSize.getWidth();
+
+                        function makeFilenameFromPrompt(q: string | undefined) {
+                          const raw = (q || "").trim();
+                          if (!raw) return "questions";
+                          const verbs = [
+                            "make",
+                            "generate",
+                            "produce",
+                            "create",
+                            "give",
+                            "write",
+                            "please",
+                            "build",
+                            "compose",
+                            "form",
+                          ];
+                          let s = raw;
+                          let changed = true;
+                          while (changed) {
+                            changed = false;
+                            for (const v of verbs) {
+                              const re = new RegExp("^" + v + "\\s+", "i");
+                              if (re.test(s)) {
+                                s = s.replace(re, "").trim();
+                                changed = true;
+                              }
+                            }
+                          }
+                          s = s.replace(/^['"]+|['"]+$/g, "").trim();
+                          let out = s.slice(0, 60).toLowerCase();
+                          out = out.replace(/[^a-z0-9\s_-]/g, "");
+                          out = out.trim().replace(/\s+/g, "_");
+                          if (!out) return "questions";
+                          return out;
+                        }
+
+                        const safeQuery = makeFilenameFromPrompt(query);
+                        const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
+
+                        doc.setFont("helvetica", "bold");
+                        doc.setFontSize(22);
+                        doc.text("Test Paper Generator", pageWidth / 2, y, { align: "center" });
+                        y += 30;
+
+                        const promptText = (query || "").trim();
+                        doc.setFont("helvetica", "normal");
+                        doc.setFontSize(12);
+                        const header = `Query: ${promptText}`;
+                        doc.text(header, margin, y);
+                        y += 20;
+
+                        const lines = (result || "").split(/\n/);
+                        doc.setFontSize(11);
+                        for (const line of lines) {
+                          const split = doc.splitTextToSize(line, pageWidth - margin * 2);
+                          for (const s of split) {
+                            if (y > doc.internal.pageSize.getHeight() - margin) {
+                              doc.addPage();
+                              y = margin;
+                            }
+                            doc.text(s, margin, y);
+                            y += 14;
+                          }
+                        }
+
+                        doc.save(filename);
+                      } catch (err) {
+                        console.error(err);
+                        toast({ title: "Download failed", description: "Could not generate PDF." });
+                      }
+                    }}
+                    className="rounded-md bg-primary px-3 py-1 text-sm text-primary-foreground"
+                  >
+                    Download PDF
+                  </button>
+                </div>
+              </div>
+
+              <pre className="whitespace-pre-wrap mt-3 rounded-md bg-card/60 p-4 text-sm">{result}</pre>
+            </div>
           )}
         </div>
       </section>

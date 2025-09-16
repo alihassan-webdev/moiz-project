@@ -498,7 +498,7 @@ export default function AnimatedAIChat({
                             // Also remove an immediately following empty line if present
                             if (rawLines[startIndex] && rawLines[startIndex].trim() === '') startIndex++;
                           }
-                          const lines = rawLines.slice(startIndex);
+                          const lines = rawLines.slice(startIndex).filter((l) => !/(<attachment\b|<\/attachment>|Here are the urls of the attachments|Only use these if|cdn\.builder\.io)/i.test(l));
                           for (let i = 0; i < lines.length; i++) {
                             const line = lines[i].trim();
                             if (!line) {

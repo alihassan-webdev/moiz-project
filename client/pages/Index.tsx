@@ -116,9 +116,7 @@ function ExternalPdfSelector({
         <button
           onClick={async () => {
             if (!selectedSubjectPath) return toast({ title: "Select PDF", description: "Please choose a PDF to use." });
-            if (!promptText) return toast({ title: "Missing prompt", description: "Please enter a prompt." });
             // Ensure subject is loaded (handleSelectSubject already loads and calls onLoadFile)
-            onSetPrompt(promptText);
             await onGenerate();
           }}
           className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground"
@@ -130,7 +128,6 @@ function ExternalPdfSelector({
           onClick={() => {
             // clear selection
             setSelectedSubjectPath("");
-            setPromptText("");
             // clear parent file state
             onLoadFile(null);
             onReset();

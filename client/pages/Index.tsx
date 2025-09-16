@@ -53,7 +53,13 @@ function ExternalPdfSelector({
     selectedClass ? byClass[selectedClass] || [] : []
   );
   const [selectedSubjectPath, setSelectedSubjectPath] = useState<string>("");
+  const [totalMarks, setTotalMarks] = useState<number>(50);
   const [promptText, setPromptText] = useState("");
+
+  const buildPaperSchemePrompt = (subjectName: string, cls: string, marks: number) => {
+    // Build the prompt according to user requirements
+    return `Make a paper scheme for a total of ${marks} marks for the subject "${subjectName}" (Class: ${cls}).\n\nThe paper must be divided into three sections:\n1. MCQs (20–25% of total marks)\n2. Short Questions (35–40% of total marks)\n3. Long Questions (35–40% of total marks)\n\nInstructions:\n- Show each section clearly with heading.\n- Show how many questions, marks per question, and total marks are included in each section.\n- Balance the distribution automatically according to the total marks (e.g., if 50 marks then MCQs ~10, Short ~20, Long ~20; if 80 marks then MCQs ~16–20, Short ~30, Long ~30).\n- Do not generate answers, only the scheme/structure.\n- Keep formatting clean and easy to read (use lists/tables if needed).\n\nRespond only with the paper scheme (no explanations).`;
+  };
 
   useEffect(() => {
     setSubjectOptions(selectedClass ? byClass[selectedClass] || [] : []);

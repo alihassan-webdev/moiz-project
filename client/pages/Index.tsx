@@ -162,14 +162,14 @@ function ExternalPdfSelector({
         </div>
 
         <div
-          className={`transition-opacity ${!selectedClass ? "opacity-50 pointer-events-none" : ""}`}
+          className={`transition-opacity ${!selectedSubjectPath ? "opacity-50 pointer-events-none" : ""}`}
         >
           <label className="text-xs text-muted-foreground">Total Marks</label>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setTotalMarks(30)}
-              disabled={!selectedClass || !!loading}
+              disabled={!selectedSubjectPath || !!loading}
               aria-pressed={totalMarks === 30}
               className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 30 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
             >
@@ -178,7 +178,7 @@ function ExternalPdfSelector({
             <button
               type="button"
               onClick={() => setTotalMarks(50)}
-              disabled={!selectedClass || !!loading}
+              disabled={!selectedSubjectPath || !!loading}
               aria-pressed={totalMarks === 50}
               className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 50 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
             >
@@ -187,7 +187,7 @@ function ExternalPdfSelector({
             <button
               type="button"
               onClick={() => setTotalMarks(100)}
-              disabled={!selectedClass || !!loading}
+              disabled={!selectedSubjectPath || !!loading}
               aria-pressed={totalMarks === 100}
               className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 100 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
             >

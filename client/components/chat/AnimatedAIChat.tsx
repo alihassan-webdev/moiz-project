@@ -111,12 +111,14 @@ const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...props}
         />
 
-        {/* Blinking caret indicator when focused */}
-        {isFocused && (
+        {/* Blinking caret indicator when focused or typing (ChatGPT-style) */}
+        {(isFocused || isTyping) && (
           <span
             aria-hidden
-            className="absolute right-3 bottom-3 h-5 w-[1px] bg-foreground/80 animate-pulse"
-          />
+            className="absolute right-4 bottom-3 text-gray-300 dark:text-gray-300 text-sm animate-[blink_1s_steps(2,end)_infinite]"
+          >
+            |
+          </span>
         )}
 
         {showRing && isFocused && (

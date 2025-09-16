@@ -206,12 +206,12 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: 14px;         /* start lower to avoid top */
-  bottom: -10px;     /* extend for bottom drop */
+  top: 16px;         /* start below top to avoid any top glow */
+  bottom: -24px;     /* increase bottom extension for taller drop */
   pointer-events: none;
   border-radius: inherit;
+  /* Bottom-only yellow shadow */
   box-shadow:
-    -8px 0 18px hsl(var(--secondary) / 0.28),  /* left (softer) */
-    8px 0 18px hsl(var(--secondary) / 0.28),   /* right (softer) */
-    0 22px 42px hsl(var(--secondary) / 0.40);  /* bottom (softer) */
+    0 36px 64px hsl(var(--secondary) / 0.38),  /* main bottom */
+    0 16px 28px hsl(var(--secondary) / 0.24);  /* soft inner */
 }

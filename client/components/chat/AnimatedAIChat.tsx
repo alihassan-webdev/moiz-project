@@ -7,7 +7,6 @@ import {
   ImageIcon,
   Figma,
   MonitorIcon,
-  Paperclip,
   SendIcon,
   XIcon,
   LoaderIcon,
@@ -16,6 +15,7 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import * as React from "react";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 type Props = {
   onSubmit: (args: {
@@ -245,7 +245,7 @@ export default function AnimatedAIChat({
   });
   const [inputFocused, setInputFocused] = useState(false);
   const commandPaletteRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedPdfPath, setSelectedPdfPath] = useState<string>("");
 
   const commandSuggestions: CommandSuggestion[] = [
     {
@@ -353,16 +353,42 @@ export default function AnimatedAIChat({
     return true;
   };
 
-  const handleAttachFile = () => {
-    fileInputRef.current?.click();
+  const pdfOptions = React.useMemo(() => {
+    const modules = import.meta.glob("/datafiles/*.pdf", { as: "url", eager: true }) as Record<string, string>;
+    const entries = Object.entries(modules).map(([path, url]) => ({
+      path,
+      url,
+      name: path.split("/").pop() || "file.pdf",
+    }));
+    return entries.sort((a, b) => a.name.localeCompare(b.name));
+  }, []);
+
+  const handleSelectPdf = async (path: string) => {
+    try {
+      const found = pdfOptions.find((p) => p.path === path);
+      if (!found) {
+        toast({ title: "Not found", description: "Selected PDF is missing." });
+        return;
+      }
+      const res = await fetch(found.url);
+      const blob = await res.blob();
+      if (blob.size > MAX_SIZE) {
+        toast({ title: "File too large", description: "Please select a PDF up to 15MB." });
+        return;
+      }
+      const f = new File([blob], found.name, { type: "application/pdf" });
+      setFile(f);
+      setSelectedPdfPath(path);
+    } catch (e) {
+      toast({ title: "Load failed", description: "Could not load the selected PDF." });
+    }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    if (f && validateFile(f)) setFile(f);
-  };
 
-  const removeAttachment = () => setFile(null);
+  const removeAttachment = () => {
+    setFile(null);
+    setSelectedPdfPath("");
+  };
 
   const selectCommandSuggestion = (index: number) => {
     const selectedCommand = commandSuggestions[index];
@@ -393,6 +419,7 @@ export default function AnimatedAIChat({
   const resetAll = () => {
     setValue("");
     setFile(null);
+    setSelectedPdfPath("");
     adjustHeight(true);
     if (onReset) onReset();
   };
@@ -878,25 +905,18 @@ export default function AnimatedAIChat({
 
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
                 <div className="flex items-center gap-3">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="application/pdf"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  <motion.button
-                    type="button"
-                    onClick={handleAttachFile}
-                    whileTap={{ scale: 0.94 }}
-                    className="group text-secondary relative rounded-lg p-2 transition-colors"
-                  >
-                    <Paperclip className="h-4 w-4 text-secondary" />
-                    <motion.span
-                      className="bg-primary/10 absolute inset-0 rounded-lg opacity-0 transition-opacity group-hover:opacity-100"
-                      layoutId="button-highlight"
-                    />
-                  </motion.button>
+                  <Select value={selectedPdfPath} onValueChange={handleSelectPdf}>
+                    <SelectTrigger className="w-[240px]">
+                      <SelectValue placeholder="Select PDF from datafiles" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {pdfOptions.map((opt) => (
+                        <SelectItem key={opt.path} value={opt.path}>
+                          {opt.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="flex items-center gap-2">

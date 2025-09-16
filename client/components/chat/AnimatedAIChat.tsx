@@ -150,8 +150,18 @@ function escapeHtml(str: string) {
 }
 
 function formatResponse(raw: string) {
+  // Remove attachment blocks and helper notes (user-uploaded attachment URLs)
+  let cleaned = raw || '';
+  // Remove any <attachment>...</attachment> blocks
+  cleaned = cleaned.replace(/<attachment[\s\S]*?<\/attachment>/gi, '');
+  // Remove lines that mention attachment URLs or instructions about attachments
+  cleaned = cleaned
+    .split('\n')
+    .filter((ln) => !/(here are the urls of the attachments|only use these if|attachments the user is working on|cdn\.builder\.io)/i.test(ln.trim()))
+    .join('\n');
+
   // Escape HTML first
-  let s = escapeHtml(raw || '');
+  let s = escapeHtml(cleaned);
 
   // Convert markdown headings (#, ##, ###) at line starts with spacing
   s = s.replace(/^###\s*(.+)$/gim, '<h3 class="font-semibold text-lg mt-6 mb-2">$1</h3>');

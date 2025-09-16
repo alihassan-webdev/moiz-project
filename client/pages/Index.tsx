@@ -21,19 +21,21 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
-// API endpoint comes from environment
-const API_URL = (import.meta.env.VITE_PREDICT_ENDPOINT as string) || "";
+// API endpoint comes from environment; default to local server route for dev
+const API_URL = (import.meta.env.VITE_PREDICT_ENDPOINT as string) || "/api/generate-questions";
 
 function ExternalPdfSelector({
   onLoadFile,
   onSetPrompt,
   onGenerate,
   onReset,
+  loading,
 }: {
   onLoadFile: (f: File | null) => void;
   onSetPrompt: (p: string) => void;
   onGenerate: (prompt?: string) => Promise<void> | void;
   onReset: () => void;
+  loading?: boolean;
 }) {
   const pdfModules = import.meta.glob("/datafiles/**/*.pdf", { as: "url", eager: true }) as Record<string, string>;
   const entries = Object.entries(pdfModules).map(([path, url]) => ({ path, url, name: path.split("/").pop() || "file.pdf" }));
@@ -130,6 +132,7 @@ function ExternalPdfSelector({
 
       <div className="mt-3 flex gap-2">
         <button
+          disabled={loading}
           onClick={async () => {
             if (!selectedSubjectPath) return toast({ title: "Select PDF", description: "Please choose a PDF to use." });
             // Ensure subject is loaded (handleSelectSubject already loads and calls onLoadFile)
@@ -139,12 +142,20 @@ function ExternalPdfSelector({
             onSetPrompt(generated);
             await onGenerate(generated);
           }}
-          className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground"
+          className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
         >
-          Generate
+          {loading ? (
+            <>
+              <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" />
+              <span>Generating...</span>
+            </>
+          ) : (
+            "Generate"
+          )}
         </button>
 
         <button
+          disabled={loading}
           onClick={() => {
             // clear selection
             setSelectedSubjectPath("");
@@ -152,7 +163,7 @@ function ExternalPdfSelector({
             onLoadFile(null);
             onReset();
           }}
-          className="rounded-md bg-muted/40 px-3 py-2 text-sm"
+          className="rounded-md bg-muted/40 px-3 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
         >
           Reset
         </button>
@@ -415,6 +426,7 @@ export default function Index() {
             onSetPrompt={(p) => setQuery(p)}
             onGenerate={async (p?: string) => await runSubmit(undefined, p)}
             onReset={onReset}
+            loading={loading}
           />
 
           {result && (

@@ -119,15 +119,29 @@ function ExternalPdfSelector({
           </Select>
         </div>
 
-        <div>
+        <div className={`transition-opacity ${!selectedClass ? 'opacity-50 pointer-events-none' : ''}`}>
           <label className="text-xs text-muted-foreground">Total Marks</label>
           <input
             type="number"
-            min={1}
-            value={totalMarks}
-            onChange={(e) => setTotalMarks(Number(e.target.value) || 0)}
+            min={20}
+            max={100}
+            value={totalMarks ?? ""}
+            placeholder="Enter"
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "") {
+                setTotalMarks(null);
+                return;
+              }
+              const n = Number(val);
+              if (isNaN(n)) return;
+              const clamped = Math.min(100, Math.max(20, Math.floor(n)));
+              setTotalMarks(clamped);
+            }}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+            disabled={!selectedClass}
           />
+          <p className="text-xs text-muted-foreground mt-1">Enter marks between 20 and 100</p>
         </div>
       </div>
 

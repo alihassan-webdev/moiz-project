@@ -245,10 +245,14 @@ function ExternalPdfSelector({
         <button
           disabled={loading}
           onClick={() => {
-            // clear selection
+            // clear local selections
+            setSelectedClass("");
             setSelectedSubjectPath("");
-            // clear parent file state
+            setTotalMarks(null);
+            setPromptText("");
+            // clear parent state
             onLoadFile(null);
+            onSetPrompt("");
             onReset();
           }}
           className="rounded-md bg-muted/40 px-3 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"

@@ -554,40 +554,63 @@ export default function Index() {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
 
-  // Enhanced formatter: convert **bold** to <strong>, headings to styled h3, questions to larger bold lines, options styled, and spacing increased
+  // Enhanced formatter: renumber per section, convert **bold** to <strong>, style headings, questions and options
   const formatResultHtml = (txt: string) => {
     if (!txt) return "";
-    // Escape first
-    let out = escapeHtml(txt);
 
-    // Convert bold **text**
+    // 1) Renumber questions per section: reset to Q1 at each "Section ..." heading
+    const renumbered = (() => {
+      const lines = txt.split(/\r?\n/);
+      let count = 0;
+      let inSection = false;
+      const out: string[] = [];
+      const headingRe = /^\s*Section\s+[A-Z0-9\-–].*$/i;
+      const qRe = /^(\s*)Q\d+\.\s*/i;
+      for (const line of lines) {
+        if (headingRe.test(line)) {
+          inSection = true;
+          count = 0;
+          out.push(line);
+          continue;
+        }
+        if (inSection && qRe.test(line)) {
+          count += 1;
+          out.push(line.replace(qRe, `$1Q${count}. `));
+        } else {
+          out.push(line);
+        }
+      }
+      return out.join("\n");
+    })();
+
+    // 2) Escape HTML to avoid XSS
+    let out = escapeHtml(renumbered);
+
+    // 3) Convert bold **text**
     out = out.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-    // Headings: lines starting with Section or Section A/B/C -> styled h3
+    // 4) Headings: lines starting with Section or Section A/B/C -> styled h3 in theme color
     out = out.replace(
       /^\s*(Section\s+[A-Z0-9\-–].*)$/gim,
-      '<h3 class="text-xl font-bold mb-3">$1</h3>',
+      '<h3 class="text-xl font-extrabold text-secondary mb-3">$1</h3>',
     );
 
-    // Convert lines that look like 'Q1.' or 'Q16.' at line start -> larger bold question line
+    // 5) Question lines 'Q1.' -> larger bold line
     out = out.replace(
       /^\s*(Q\d+\.)\s*(.*)$/gim,
       '<p class="text-lg font-semibold mb-3"><strong>$1</strong> $2</p>',
     );
 
-    // Convert MCQ option lines like 'a) text' to styled option lines
+    // 6) MCQ options like 'a) text'
     out = out.replace(
       /^\s*([a-d])\)\s*(.*)$/gim,
       '<div class="ml-6 mb-2 text-base"><strong class="mr-2">$1)</strong>$2</div>',
     );
 
-    // Paragraphs: two or more newlines -> paragraph break with spacing
+    // 7) Paragraph spacing
     out = out.replace(/\n{2,}/g, '</p><p class="mb-4">');
-
-    // Single newlines -> line break
     out = out.replace(/\n/g, "<br />");
 
-    // Wrap with a paragraph if not already
     if (!out.startsWith("<h3>") && !out.startsWith("<p>")) {
       out = `<p class=\"mb-4\">${out}</p>`;
     }

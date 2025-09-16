@@ -1,9 +1,6 @@
-import { useState, useCallback, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { useState, useCallback, useEffect, useRef } from "react";
+import AnimatedAIChat from "@/components/chat/AnimatedAIChat";
 import { toast } from "@/hooks/use-toast";
-import { Copy, Download } from "lucide-react";
 
 type ApiResult = string;
 
@@ -24,6 +21,9 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
+// API endpoint comes from environment
+const API_URL = (import.meta.env.VITE_PREDICT_ENDPOINT as string) || "";
+
 export default function Index() {
   const [file, setFile] = useState<File | null>(null);
   const [query, setQuery] = useState("");
@@ -31,6 +31,7 @@ export default function Index() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ApiResult | null>(null);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     try {
@@ -76,45 +77,99 @@ export default function Index() {
     setFile(f);
   };
 
-  const runSubmit = async () => {
+  const onReset = () => {
+    setFile(null);
+    setQuery("");
     setError(null);
     setResult(null);
-    if (!file) {
+    const el = fileInputRef.current;
+    if (el) el.value = "";
+  };
+
+  const runSubmit = async (fArg?: File | null, qArg?: string) => {
+    setError(null);
+    setResult(null);
+    const theFile = fArg ?? file;
+    const q = (qArg ?? query).trim();
+    if (!theFile) {
       setError("Attach a PDF file first.");
       toast({ title: "Missing PDF", description: "Attach a PDF to continue." });
       return;
     }
-    const q = query.trim();
     if (!q) {
       setError("Enter a query.");
       toast({ title: "Missing query", description: "Write what to generate." });
       return;
     }
 
-    const send = async (timeoutMs: number) => {
+    const sendTo = async (urlStr: string, timeoutMs: number) => {
+      const isExternal = /^https?:/i.test(urlStr);
+
+      const form = new FormData();
+      form.append("pdf", theFile);
+      form.append("query", q);
+      // External APIs may expect the field name "file"; include both for compatibility
+      if (isExternal) {
+        form.append("file", theFile);
+      }
+
+      let finalUrl = urlStr;
+      if (isExternal && q) {
+        const u = new URL(urlStr);
+        u.searchParams.set("query", q);
+        finalUrl = u.toString();
+      }
+
       const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), timeoutMs);
+      const t = setTimeout(() => controller.abort(new Error("timeout")), timeoutMs);
+
       try {
-        const form = new FormData();
-        form.append("pdf", file);
-        form.append("query", q);
+        console.debug("Attempting fetch ->", finalUrl, { isExternal });
+        const res = await fetch(finalUrl, {
+          method: "POST",
+          body: form,
+          signal: controller.signal,
+          headers: { Accept: "application/json" },
+          ...(isExternal
+            ? {
+                mode: "cors" as const,
+                credentials: "omit" as const,
+                referrerPolicy: "no-referrer" as const,
+              }
+            : {}),
+        });
+        return res;
+      } catch (err: any) {
         try {
-          const res = await fetch("/api/generate-questions", {
-            method: "POST",
-            body: form,
-            signal: controller.signal,
-            headers: { Accept: "application/json" },
-          });
-          return res;
-        } catch (err: any) {
-          // Normalize AbortError to a null response so callers can handle retries
           if (err?.name === "AbortError") {
-            return null;
+            console.warn("Fetch aborted:", finalUrl, err?.message ?? err);
+          } else if (err?.message === "Failed to fetch" || err?.name === "TypeError") {
+            // Likely network or CORS
+            console.warn("Network or CORS error when fetching:", finalUrl, err?.message ?? err);
+          } else {
+            console.warn("Fetch error:", finalUrl, err?.message ?? err);
           }
-          throw err;
-        }
+        } catch {}
+        return null;
       } finally {
         clearTimeout(t);
+      }
+    };
+
+    // Check whether a lightweight request to the given URL responds (used to test proxies)
+    const checkEndpoint = async (urlStr: string, timeoutMs = 3000) => {
+      try {
+        const controller = new AbortController();
+        const t = setTimeout(() => controller.abort(), timeoutMs);
+        const res = await fetch(urlStr, {
+          method: "OPTIONS",
+          mode: "cors",
+          signal: controller.signal,
+        });
+        clearTimeout(t);
+        return res && (res.ok || res.status === 200 || res.status === 204);
+      } catch (err) {
+        return false;
       }
     };
 
@@ -122,24 +177,41 @@ export default function Index() {
       setLoading(true);
       let res: Response | null = null;
 
+      // Send directly to the API endpoint configured via VITE_PREDICT_ENDPOINT
       try {
-        res = await send(settings.initialTimeoutMs);
+        if (!API_URL) {
+          throw new Error("Missing VITE_PREDICT_ENDPOINT in .env");
+        }
+        res = await sendTo(API_URL, settings.initialTimeoutMs);
       } catch (err: any) {
-        if (err?.name === "AbortError") {
-          toast({ title: "Slow connection", description: "Retrying..." });
-        } else {
-          throw err;
+        toast({
+          title: "Connection issue",
+          description: err?.message || "Check your API endpoint.",
+        });
+        res = null;
+      }
+
+      // If direct request failed (CORS or network), try Netlify function proxy then /api/proxy (Vercel)
+      if (!res) {
+        const proxies = ["/.netlify/functions/proxy", "/api/proxy"]; // netlify, vercel
+        for (const proxyPath of proxies) {
+          // check if proxy path is reachable before sending large multipart payload
+          const ok = await checkEndpoint(proxyPath, 2500).catch(() => false);
+          if (!ok) continue;
+          try {
+            res = await sendTo(proxyPath, settings.retryTimeoutMs);
+            if (res) break;
+          } catch (err) {
+            res = null;
+          }
         }
       }
 
-      if ((!res || !res.ok || res.status === 504) && settings.autoRetry) {
-        await new Promise((r) => setTimeout(r, 800));
-        res = await send(settings.retryTimeoutMs);
-      }
-
-      // If send returned null (e.g. aborted), normalize to an error to be handled below
       if (!res) {
-        throw new Error("Request timed out or was aborted");
+        // If we get here, it likely failed due to CORS or network. Provide a helpful error.
+        throw new Error(
+          "Network or CORS error. If deployed on Netlify set VITE_PREDICT_ENDPOINT='/.netlify/functions/proxy' and PREDICT_ENDPOINT='https://api-va5v.onrender.com', or on Vercel set VITE_PREDICT_ENDPOINT='/api/proxy' and PREDICT_ENDPOINT='https://api-va5v.onrender.com'. Alternatively, enable CORS on the API."
+        );
       }
 
       const contentType = res.headers.get("content-type") || "";
@@ -152,7 +224,10 @@ export default function Index() {
         const text =
           typeof json === "string"
             ? json
-            : (json?.questions ?? json?.result ?? json?.message ?? JSON.stringify(json, null, 2));
+            : (json?.questions ??
+              json?.result ??
+              json?.message ??
+              JSON.stringify(json, null, 2));
         setResult(String(text));
       } else {
         const text = await res.text();
@@ -178,140 +253,35 @@ export default function Index() {
   return (
     <div>
       <section className="relative overflow-hidden rounded-2xl px-6 py-16 text-white">
-        <div className="absolute inset-0 bg-gradient-to-tr from-primary/90 via-accent/40 to-secondary/80 blur-2xl opacity-95 -z-10" />
+        <div className="absolute inset-0 bg-background -z-10" />
         <div className="relative mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl text-secondary drop-shadow-md">
-            Upload a PDF and generate premium-quality questions
+            Test Paper Generater
           </h1>
-          <p className="mt-3 text-sm text-white/90">Fast, accurate question generation tailored to your query.</p>
+          <p className="mt-3 text-sm text-white/90">
+            Fast, accurate question generation tailored to your query.
+          </p>
         </div>
       </section>
 
-      <section className="mx-auto mt-10 grid max-w-5xl gap-8 md:grid-cols-5">
-        <form onSubmit={submit} className="md:col-span-3 space-y-6">
-          <div>
-            <label
-              onDrop={onDrop}
-              onDragOver={(e) => e.preventDefault()}
-              className={cn(
-                "group relative flex cursor-pointer flex-col items-center justify-center gap-3 rounded-xl p-8 text-center transition-colors card-surface",
-                file ? "ring-2 ring-secondary/70" : "border-2 border-dashed border-secondary/40 hover:ring-2 hover:ring-secondary/60",
-              )}
-            >
-              <input
-                type="file"
-                accept="application/pdf"
-                className="hidden"
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) handleFile(f);
-                }}
-              />
-              <div className="rounded-md bg-gradient-to-br from-secondary to-secondary/80 p-[2px]">
-                <div className="rounded-md bg-background px-4 py-2 text-sm font-medium text-foreground">
-                  {file ? "PDF attached" : "Click to upload or drag & drop"}
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                {file ? file.name : "PDF up to 15MB"}
-              </p>
-            </label>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">Your query</label>
-            <Textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={(e) => {
-                if (
-                  e.key === "Enter" &&
-                  !e.shiftKey &&
-                  !e.ctrlKey &&
-                  !e.altKey
-                ) {
-                  e.preventDefault();
-                  if (!loading) {
-                    // Trigger submit on Enter
-                    // Avoid unhandled promise rejections when calling from key handlers
-                    void runSubmit();
-                  }
-                }
-              }}
-              placeholder="e.g. Generate 10 multiple-choice questions covering key concepts"
-              rows={5}
-            />
-          </div>
-
+      <section className="mx-auto mt-10 max-w-5xl space-y-6">
+        <div className="space-y-4">
           {error && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
               {error}
             </div>
           )}
-
-          <div className="flex items-center gap-3">
-            <Button type="submit" disabled={loading} variant="secondary" className="min-w-32">
-              {loading ? "Generating..." : "Generate"}
-            </Button>
-          </div>
-        </form>
-
-        <div className="md:col-span-2">
-          <div className="sticky top-24">
-            <div className="card-surface p-5">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-lg font-semibold">Response</h3>
-                  <p className="text-sm text-muted-foreground">Results from your latest request</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="icon"
-                    aria-label="Download"
-                    disabled={!result || loading}
-                    onClick={() => {
-                      if (!result) return;
-                      const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      const safeQuery = (query || "").trim().slice(0, 50).replace(/[^a-z0-9_-]/gi, "_") || "questions";
-                      const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
-                      a.download = filename;
-                      document.body.appendChild(a);
-                      a.click();
-                      a.remove();
-                      // Delay revoke slightly to ensure download is initiated in all browsers
-                      setTimeout(() => URL.revokeObjectURL(url), 1000);
-                    }}
-                  >
-                    <Download />
-                    <span className="sr-only">Download</span>
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-4 max-h-[420px] overflow-auto rounded-md bg-background p-4 text-sm">
-                {!result && !loading && (
-                  <p className="text-muted-foreground">No result yet. Submit the form to see the output.</p>
-                )}
-                {loading && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" className="opacity-25" />
-                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" className="opacity-75" />
-                    </svg>
-                    Generating...
-                  </div>
-                )}
-                {!!result && !loading && (
-                  <pre className="whitespace-pre-wrap break-words text-foreground">{result}</pre>
-                )}
-              </div>
-            </div>
-          </div>
+          <AnimatedAIChat
+            loading={loading}
+            result={result}
+            query={query}
+            onReset={onReset}
+            onSubmit={async ({ file: f, query: q }) => {
+              if (f) setFile(f);
+              setQuery(q);
+              await runSubmit(f, q);
+            }}
+          />
         </div>
       </section>
     </div>

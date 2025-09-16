@@ -1,13 +1,17 @@
 import { defineConfig, Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { createServer } from "./server";
 
 // HMR configuration can be driven by environment variables so preview/proxy
 // environments can override protocol/host/port when necessary.
 const HMR = {
-  protocol: process.env.HMR_PROTOCOL || process.env.VITE_HMR_PROTOCOL || undefined,
-  host: process.env.HMR_HOST || process.env.VITE_HMR_HOST || process.env.HOST || undefined,
+  protocol:
+    process.env.HMR_PROTOCOL || process.env.VITE_HMR_PROTOCOL || undefined,
+  host:
+    process.env.HMR_HOST ||
+    process.env.VITE_HMR_HOST ||
+    process.env.HOST ||
+    undefined,
   port: process.env.HMR_PORT ? Number(process.env.HMR_PORT) : undefined,
 };
 
@@ -23,19 +27,22 @@ export default defineConfig(({ mode }) => ({
         path.resolve(__dirname, "client"),
         path.resolve(__dirname, "shared"),
       ],
-      deny: [
-        ".env",
-        ".env.*",
-        "*.{crt,pem}",
-        "**/.git/**",
-        "server/**",
-      ],
+      deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
+    },
+    proxy: {
+      // Proxy the Netlify function path to the external API during local dev to avoid CORS
+      "/.netlify/functions/proxy": {
+        target: process.env.PREDICT_ENDPOINT || "https://api-va5v.onrender.com",
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace("/.netlify/functions/proxy", "/generate-questions"),
+      },
     },
   },
   build: {
-    outDir: "dist/spa",
+    outDir: "dist",
   },
-  plugins: [react(), expressPlugin()],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client"),
@@ -43,14 +50,3 @@ export default defineConfig(({ mode }) => ({
     },
   },
 }));
-
-function expressPlugin(): Plugin {
-  return {
-    name: "express-plugin",
-    apply: "serve", // only during dev
-    configureServer(server) {
-      const app = createServer();
-      server.middlewares.use(app); // add express middleware
-    },
-  };
-}

@@ -26,6 +26,7 @@ type Props = {
   result?: string | null;
   query?: string;
   onReset?: () => void;
+  externalFile?: File | null;
 };
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
@@ -230,6 +231,7 @@ export default function AnimatedAIChat({
   result,
   query,
   onReset,
+  externalFile,
 }: Props) {
   const [value, setValue] = useState("");
   const [file, setFile] = useState<File | null>(null);

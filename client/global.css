@@ -188,7 +188,7 @@
   box-shadow:
     -6px 0 18px hsl(var(--secondary) / 0.35), /* left */
     6px 0 18px hsl(var(--secondary) / 0.35),  /* right */
-    0 10px 22px hsl(var(--secondary) / 0.45); /* bottom */
+    0 18px 36px hsl(var(--secondary) / 0.50); /* bottom */
   border-radius: var(--radius);
 }
 /* Mask any residual top glow */
@@ -208,6 +208,6 @@
   box-shadow:
     -8px 0 22px hsl(var(--secondary) / 0.45),
     8px 0 22px hsl(var(--secondary) / 0.45),
-    0 14px 28px hsl(var(--secondary) / 0.55);
+    0 24px 48px hsl(var(--secondary) / 0.60);
   transition: box-shadow 0.2s ease-in-out;
 }

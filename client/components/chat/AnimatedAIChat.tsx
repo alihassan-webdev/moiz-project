@@ -145,6 +145,38 @@ const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 );
 InnerTextarea.displayName = "Textarea";
 
+function escapeHtml(str: string) {
+  return str.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+}
+
+function formatResponse(raw: string) {
+  // Escape HTML first
+  let s = escapeHtml(raw);
+  // Convert markdown headings (#, ##, ###) at line starts
+  s = s.replace(/^###\s*(.+)$/gim, '<h3 class="font-semibold text-lg mt-4 mb-2">$1</h3>');
+  s = s.replace(/^##\s*(.+)$/gim, '<h2 class="font-semibold text-xl mt-4 mb-2">$1</h2>');
+  s = s.replace(/^#\s*(.+)$/gim, '<h1 class="font-semibold text-2xl mt-4 mb-2">$1</h1>');
+  // Bold **text**
+  s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>');
+  // Convert lines starting with - or * into <li>
+  // First handle unordered lists
+  s = s.replace(/^(?:[-*])\s+(.+)$/gim, '<li>$1</li>');
+  // Wrap consecutive <li> into <ul>
+  s = s.replace(/(?:<(?:li)>.*?<\/(?:li)>\s*)+/gms, (match) => {
+    const items = match.match(/<li>.*?<\/li>/gms) || [];
+    return `<ul class="list-disc pl-6 mb-3">${items.join('')}</ul>`;
+  });
+  // Convert double newlines to paragraph separators
+  s = s.replace(/\n{2,}/g, '</p><p>');
+  // Convert single newlines to <br>
+  s = s.replace(/\n/g, '<br />');
+  // Wrap the whole thing in <p> if it doesn't start with a heading or list
+  if (!s.trim().startsWith('<h') && !s.trim().startsWith('<ul') && !s.trim().startsWith('<p>')) {
+    s = `<p>${s}</p>`;
+  }
+  return s;
+}
+
 export default function AnimatedAIChat({
   onSubmit,
   loading,

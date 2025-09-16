@@ -7,7 +7,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader("Access-Control-Allow-Headers", "*");
     return res.status(204).end();
   }
-  const EXTERNAL = process.env.PREDICT_ENDPOINT || "https://api-va5v.onrender.com/generate-questions";
+  const EXTERNAL =
+    process.env.PREDICT_ENDPOINT ||
+    "https://api-va5v.onrender.com/generate-questions";
 
   try {
     const url = new URL(EXTERNAL);
@@ -22,10 +24,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const fetchRes = await fetch(url.toString(), {
       method: req.method || "GET",
       headers: headers as any,
-      body: req.method && req.method !== "GET" ? (req as any).rawBody || req.body : undefined,
+      body:
+        req.method && req.method !== "GET"
+          ? (req as any).rawBody || req.body
+          : undefined,
     });
 
-    const contentType = fetchRes.headers.get("content-type") || "application/octet-stream";
+    const contentType =
+      fetchRes.headers.get("content-type") || "application/octet-stream";
     const buffer = Buffer.from(await fetchRes.arrayBuffer());
 
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -37,6 +43,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (err: any) {
     console.error("Proxy error", err);
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.status(500).json({ error: true, message: err?.message || "Proxy error" });
+    res
+      .status(500)
+      .json({ error: true, message: err?.message || "Proxy error" });
   }
 }

@@ -444,7 +444,11 @@ export default function Index() {
       try {
         const controller = new AbortController();
         const t = setTimeout(() => controller.abort(), timeoutMs);
-        const res = await fetch(urlStr, { method: "HEAD", mode: "cors", signal: controller.signal }).catch(() => null);
+        const res = await fetch(urlStr, {
+          method: "HEAD",
+          mode: "cors",
+          signal: controller.signal,
+        }).catch(() => null);
         clearTimeout(t);
         // Consider any response (even 404/405) as reachable; network errors return null
         return !!res;
@@ -474,11 +478,11 @@ export default function Index() {
       // If direct request failed (CORS or network), try Netlify function proxy then /api/proxy (Vercel)
       if (!res) {
         const proxies = [
-        "/.netlify/functions/proxy", // Netlify function proxy
-        "/api/proxy",               // Vercel function proxy
-        "/api/generate-questions",  // Node/Express route (server deploys)
-        "/proxy"                    // Express proxy fallback
-      ];
+          "/.netlify/functions/proxy", // Netlify function proxy
+          "/api/proxy", // Vercel function proxy
+          "/api/generate-questions", // Node/Express route (server deploys)
+          "/proxy", // Express proxy fallback
+        ];
         for (const proxyPath of proxies) {
           // check if proxy path is reachable before sending large multipart payload
           const ok = await checkEndpoint(proxyPath, 2500).catch(() => false);

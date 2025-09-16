@@ -449,9 +449,10 @@ export default function AnimatedAIChat({
                       </div>
                     )}
                     {!!result && !loading && (
-                      <pre className="whitespace-pre-wrap break-words text-foreground text-base md:text-lg leading-7 font-sans">
-                        {result}
-                      </pre>
+                      <div
+                        className="whitespace-pre-wrap break-words text-foreground text-base md:text-lg leading-7 font-sans"
+                        dangerouslySetInnerHTML={{ __html: formatResponse(result ?? "") }}
+                      />
                     )}
                   </div>
                 </div>

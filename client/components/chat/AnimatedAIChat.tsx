@@ -151,29 +151,37 @@ function escapeHtml(str: string) {
 
 function formatResponse(raw: string) {
   // Escape HTML first
-  let s = escapeHtml(raw);
-  // Convert markdown headings (#, ##, ###) at line starts
-  s = s.replace(/^###\s*(.+)$/gim, '<h3 class="font-semibold text-lg mt-4 mb-2">$1</h3>');
-  s = s.replace(/^##\s*(.+)$/gim, '<h2 class="font-semibold text-xl mt-4 mb-2">$1</h2>');
-  s = s.replace(/^#\s*(.+)$/gim, '<h1 class="font-semibold text-2xl mt-4 mb-2">$1</h1>');
-  // Bold **text**
+  let s = escapeHtml(raw || '');
+
+  // Convert markdown headings (#, ##, ###) at line starts with spacing
+  s = s.replace(/^###\s*(.+)$/gim, '<h3 class="font-semibold text-lg mt-6 mb-2">$1</h3>');
+  s = s.replace(/^##\s*(.+)$/gim, '<h2 class="font-semibold text-xl mt-6 mb-3">$1</h2>');
+  s = s.replace(/^#\s*(.+)$/gim, '<h1 class="font-semibold text-2xl md:text-3xl mt-6 mb-3">$1</h1>');
+
+  // Bold **text** -> strong
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>');
-  // Convert lines starting with - or * into <li>
-  // First handle unordered lists
-  s = s.replace(/^(?:[-*])\s+(.+)$/gim, '<li>$1</li>');
-  // Wrap consecutive <li> into <ul>
-  s = s.replace(/(?:<(?:li)>.*?<\/(?:li)>\s*)+/gms, (match) => {
-    const items = match.match(/<li>.*?<\/li>/gms) || [];
-    return `<ul class="list-disc pl-6 mb-3">${items.join('')}</ul>`;
+
+  // Convert unordered list items (- or *) to <li class="mb-2">
+  s = s.replace(/^(?:[-*])\s+(.+)$/gim, '<li class="mb-2">$1</li>');
+
+  // Wrap consecutive <li> into <ul class="list-disc pl-6 mb-4">
+  s = s.replace(/(?:\s*<li class="mb-2">.*?<\/li>\s*)+/gms, (match) => {
+    const items = match.match(/<li class="mb-2">.*?<\/li>/gms) || [];
+    return `<ul class="list-disc pl-6 mb-4">${items.join('')}</ul>`;
   });
-  // Convert double newlines to paragraph separators
-  s = s.replace(/\n{2,}/g, '</p><p>');
-  // Convert single newlines to <br>
-  s = s.replace(/\n/g, '<br />');
-  // Wrap the whole thing in <p> if it doesn't start with a heading or list
-  if (!s.trim().startsWith('<h') && !s.trim().startsWith('<ul') && !s.trim().startsWith('<p>')) {
-    s = `<p>${s}</p>`;
-  }
+
+  // Normalize paragraphs: split by two or more newlines
+  const parts = s.split(/\n{2,}/g).map((p) => p.trim()).filter(Boolean);
+  s = parts
+    .map((part) => {
+      // If part already starts with a block tag (h1/h2/h3/ul), keep it
+      if (/^<(h1|h2|h3|ul)/i.test(part)) return part;
+      // Replace remaining single newlines with <br>
+      const withBreaks = part.replace(/\n/g, '<br />');
+      return `<p class="mb-4 text-base md:text-lg leading-relaxed">${withBreaks}</p>`;
+    })
+    .join('');
+
   return s;
 }
 

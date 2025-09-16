@@ -615,7 +615,7 @@ export default function Index() {
           )}
 
           {/* External controls: Class -> Subject -> Prompt */}
-          <div className="w-full max-w-2xl ml-auto">
+          <div className="w-full max-w-2xl mx-auto">
             <ExternalPdfSelector
               onLoadFile={(f) => setFile(f)}
               onSetPrompt={(p) => setQuery(p)}
@@ -626,7 +626,7 @@ export default function Index() {
           </div>
 
           {result && (
-            <div className="mt-4 w-full max-w-2xl ml-auto">
+            <div className="mt-4 w-full max-w-2xl mx-auto">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Result</h3>
                 <div className="flex items-center gap-2">

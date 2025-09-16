@@ -27,9 +27,13 @@ const API_URL = (import.meta.env.VITE_PREDICT_ENDPOINT as string) || "";
 function ExternalPdfSelector({
   onLoadFile,
   onSetPrompt,
+  onGenerate,
+  onReset,
 }: {
-  onLoadFile: (f: File) => void;
+  onLoadFile: (f: File | null) => void;
   onSetPrompt: (p: string) => void;
+  onGenerate: () => Promise<void> | void;
+  onReset: () => void;
 }) {
   const pdfModules = import.meta.glob("/datafiles/**/*.pdf", { as: "url", eager: true }) as Record<string, string>;
   const entries = Object.entries(pdfModules).map(([path, url]) => ({ path, url, name: path.split("/").pop() || "file.pdf" }));
@@ -124,10 +128,11 @@ function ExternalPdfSelector({
             if (!promptText) return toast({ title: "Missing prompt", description: "Please enter a prompt." });
             // Ensure subject is loaded (handleSelectSubject already loads and calls onLoadFile)
             onSetPrompt(promptText);
+            await onGenerate();
           }}
           className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground"
         >
-          Use Prompt
+          Generate
         </button>
 
         <button
@@ -135,10 +140,13 @@ function ExternalPdfSelector({
             // clear selection
             setSelectedSubjectPath("");
             setPromptText("");
+            // clear parent file state
+            onLoadFile(null);
+            onReset();
           }}
           className="rounded-md bg-muted/40 px-3 py-2 text-sm"
         >
-          Clear
+          Reset
         </button>
       </div>
     </div>
@@ -397,6 +405,8 @@ export default function Index() {
           <ExternalPdfSelector
             onLoadFile={(f) => setFile(f)}
             onSetPrompt={(p) => setQuery(p)}
+            onGenerate={async () => await runSubmit()}
+            onReset={onReset}
           />
 
           <div className="mt-4">

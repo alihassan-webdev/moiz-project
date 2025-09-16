@@ -53,12 +53,10 @@ function ExternalPdfSelector({
   }, {});
 
   const classOptions = Object.keys(byClass).sort();
-  const [selectedClass, setSelectedClass] = useState<string>(classOptions[0] || "");
-  const [subjectOptions, setSubjectOptions] = useState<{ path: string; url: string; name: string }[]>(
-    selectedClass ? byClass[selectedClass] || [] : []
-  );
+  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [subjectOptions, setSubjectOptions] = useState<{ path: string; url: string; name: string }[]>([]);
   const [selectedSubjectPath, setSelectedSubjectPath] = useState<string>("");
-  const [totalMarks, setTotalMarks] = useState<number>(50);
+  const [totalMarks, setTotalMarks] = useState<number | null>(null);
   const [promptText, setPromptText] = useState("");
 
   const buildPaperSchemePrompt = (subjectName: string, cls: string, marks: number) => {

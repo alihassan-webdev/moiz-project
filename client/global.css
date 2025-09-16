@@ -187,24 +187,38 @@
   position: relative;
   border-radius: var(--radius);
 }
+/* Top cover to eliminate any visible top shadow completely */
+.card-yellow-shadow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px; /* cover top edge fully */
+  background: hsl(var(--card) / 0.60); /* match bg-card/60 */
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+  pointer-events: none;
+  z-index: 1;
+}
 .card-yellow-shadow::after {
   content: "";
   position: absolute;
   left: 0;
   right: 0;
-  top: 8px;          /* start below top to avoid any top spill */
-  bottom: -8px;      /* extend a bit to enhance bottom drop */
+  top: 14px;         /* start lower to avoid top */
+  bottom: -10px;     /* extend for bottom drop */
   pointer-events: none;
   border-radius: inherit;
   box-shadow:
-    -8px 0 22px hsl(var(--secondary) / 0.45),  /* left */
-    8px 0 22px hsl(var(--secondary) / 0.45),   /* right */
-    0 24px 48px hsl(var(--secondary) / 0.60);  /* bottom */
+    -8px 0 18px hsl(var(--secondary) / 0.28),  /* left (softer) */
+    8px 0 18px hsl(var(--secondary) / 0.28),   /* right (softer) */
+    0 22px 42px hsl(var(--secondary) / 0.40);  /* bottom (softer) */
 }
 .card-yellow-shadow:hover::after {
   box-shadow:
-    -10px 0 26px hsl(var(--secondary) / 0.55),
-    10px 0 26px hsl(var(--secondary) / 0.55),
-    0 28px 56px hsl(var(--secondary) / 0.68);
+    -9px 0 20px hsl(var(--secondary) / 0.35),
+    9px 0 20px hsl(var(--secondary) / 0.35),
+    0 24px 46px hsl(var(--secondary) / 0.48);
   transition: box-shadow 0.2s ease-in-out;
 }

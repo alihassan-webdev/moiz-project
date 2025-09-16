@@ -215,10 +215,3 @@
     8px 0 18px hsl(var(--secondary) / 0.28),   /* right (softer) */
     0 22px 42px hsl(var(--secondary) / 0.40);  /* bottom (softer) */
 }
-.card-yellow-shadow:hover::after {
-  box-shadow:
-    -9px 0 20px hsl(var(--secondary) / 0.35),
-    9px 0 20px hsl(var(--secondary) / 0.35),
-    0 24px 46px hsl(var(--secondary) / 0.48);
-  transition: box-shadow 0.2s ease-in-out;
-}

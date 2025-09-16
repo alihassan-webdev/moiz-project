@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import AnimatedAIChat from "@/components/chat/AnimatedAIChat";
 import { toast } from "@/hooks/use-toast";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
@@ -400,18 +399,29 @@ export default function Index() {
             onSetPrompt={(p) => setQuery(p)}
           />
 
-          <AnimatedAIChat
-            loading={loading}
-            result={result}
-            query={query}
-            externalFile={file}
-            onReset={onReset}
-            onSubmit={async ({ file: f, query: q }) => {
-              if (f) setFile(f);
-              setQuery(q);
-              await runSubmit(f, q);
-            }}
-          />
+          <div className="mt-4">
+            <div className="flex gap-2">
+              <button
+                onClick={async () => {
+                  if (!loading) await runSubmit();
+                }}
+                className="rounded-md bg-secondary px-4 py-2 text-sm text-secondary-foreground"
+              >
+                Generate
+              </button>
+
+              <button
+                onClick={onReset}
+                className="rounded-md bg-muted/40 px-4 py-2 text-sm"
+              >
+                Reset
+              </button>
+            </div>
+
+            {result && (
+              <pre className="whitespace-pre-wrap mt-4 rounded-md bg-card/60 p-4 text-sm">{result}</pre>
+            )}
+          </div>
         </div>
       </section>
     </div>

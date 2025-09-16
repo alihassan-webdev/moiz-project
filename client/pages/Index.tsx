@@ -171,7 +171,7 @@ function ExternalPdfSelector({
             type="number"
             min={20}
             max={100}
-            step={1}
+            step="any"
             value={totalMarks ?? ""}
             placeholder="Enter"
             onChange={(e) => {
@@ -182,15 +182,14 @@ function ExternalPdfSelector({
               }
               const n = Number(val);
               if (isNaN(n)) return;
-              const clamped = Math.min(100, Math.max(20, Math.floor(n)));
-              setTotalMarks(clamped);
+              setTotalMarks(n);
             }}
             onBlur={(e) => {
               const val = e.target.value;
               if (val === "") return;
               const n = Number(val);
               if (isNaN(n)) return;
-              const clamped = Math.min(100, Math.max(20, Math.floor(n)));
+              const clamped = Math.min(100, Math.max(20, n));
               if (clamped !== n) setTotalMarks(clamped);
             }}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
@@ -222,10 +221,13 @@ function ExternalPdfSelector({
                 description: "Please enter a value between 20 and 100.",
               });
             }
+            // Clamp marks just before generating
+            const marks = Math.min(100, Math.max(20, Number(totalMarks)));
+            if (marks !== totalMarks) setTotalMarks(marks);
             const generated = buildPaperSchemePrompt(
               subjectName,
               selectedClass || "",
-              totalMarks,
+              marks,
             );
             onSetPrompt(generated);
             await onGenerate(generated);

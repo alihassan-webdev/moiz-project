@@ -114,8 +114,8 @@ function ExternalPdfSelector({
   };
 
   return (
-    <div className="rounded-md card-yellow-shadow border border-muted/20 bg-card/60 p-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+    <div className="rounded-xl card-yellow-shadow border border-muted/20 bg-card/60 p-6 sm:p-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
         <div>
           <label className="text-xs text-muted-foreground">Class</label>
           <Select
@@ -615,7 +615,7 @@ export default function Index() {
           )}
 
           {/* External controls: Class -> Subject -> Prompt */}
-          <div className="w-full max-w-2xl mx-auto">
+          <div className="w-full max-w-4xl mx-auto">
             <ExternalPdfSelector
               onLoadFile={(f) => setFile(f)}
               onSetPrompt={(p) => setQuery(p)}
@@ -730,7 +730,7 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="mt-3 rounded-md card-yellow-shadow bg-card/60 p-6 text-base">
+              <div className="mt-3 rounded-xl card-yellow-shadow bg-card/60 p-8 text-base">
                 <div
                   className="prose prose-invert prose-lg leading-relaxed max-w-none"
                   dangerouslySetInnerHTML={{

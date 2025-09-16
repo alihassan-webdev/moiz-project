@@ -601,9 +601,9 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="mt-3 rounded-md bg-card/60 p-6 text-sm">
+              <div className="mt-3 rounded-md bg-card/60 p-6 text-base">
                 <div
-                  className="prose prose-invert max-w-none"
+                  className="prose prose-invert prose-lg leading-relaxed max-w-none"
                   dangerouslySetInnerHTML={{ __html: formatResultHtml(result || "") }}
                 />
               </div>

@@ -482,7 +482,8 @@ export default function AnimatedAIChat({
                   )}
                   style={{ overflow: "hidden" }}
                   showRing={false}
-                />
+                  typing={isTyping}
+                  />
               </div>
 
               <AnimatePresence>

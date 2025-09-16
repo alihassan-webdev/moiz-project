@@ -249,6 +249,21 @@ export default function AnimatedAIChat({
   const commandPaletteRef = useRef<HTMLDivElement>(null);
   const [selectedPdfPath, setSelectedPdfPath] = useState<string>("");
 
+  // If parent passes an external file, sync it into the internal attachment state
+  useEffect(() => {
+    if (externalFile) {
+      setFile(externalFile);
+      // keep selectedPdfPath empty when external file is provided from parent
+      setSelectedPdfPath("");
+    }
+    // if externalFile becomes null, clear internal file
+    if (!externalFile) {
+      setFile((prev) => prev ?? null);
+    }
+  // intentionally only run when externalFile changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalFile]);
+
   const commandSuggestions: CommandSuggestion[] = [
     {
       icon: <ImageIcon className="h-4 w-4" />,

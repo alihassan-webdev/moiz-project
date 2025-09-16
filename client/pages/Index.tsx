@@ -167,36 +167,37 @@ function ExternalPdfSelector({
           className={`transition-opacity ${!selectedClass ? "opacity-50 pointer-events-none" : ""}`}
         >
           <label className="text-xs text-muted-foreground">Total Marks</label>
-          <input
-            type="number"
-            min={20}
-            max={100}
-            step="any"
-            value={totalMarks ?? ""}
-            placeholder="Enter"
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === "") {
-                setTotalMarks(null);
-                return;
-              }
-              const n = Number(val);
-              if (isNaN(n)) return;
-              setTotalMarks(n);
-            }}
-            onBlur={(e) => {
-              const val = e.target.value;
-              if (val === "") return;
-              const n = Number(val);
-              if (isNaN(n)) return;
-              const clamped = Math.min(100, Math.max(20, n));
-              if (clamped !== n) setTotalMarks(clamped);
-            }}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
-            disabled={!selectedClass}
-          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setTotalMarks(30)}
+              disabled={!selectedClass || !!loading}
+              aria-pressed={totalMarks === 30}
+              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 30 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+            >
+              30
+            </button>
+            <button
+              type="button"
+              onClick={() => setTotalMarks(50)}
+              disabled={!selectedClass || !!loading}
+              aria-pressed={totalMarks === 50}
+              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 50 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+            >
+              50
+            </button>
+            <button
+              type="button"
+              onClick={() => setTotalMarks(100)}
+              disabled={!selectedClass || !!loading}
+              aria-pressed={totalMarks === 100}
+              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 100 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+            >
+              100
+            </button>
+          </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Enter marks between 20 and 100
+            Select 30, 50, or 100
           </p>
         </div>
       </div>

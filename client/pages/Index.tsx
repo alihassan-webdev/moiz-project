@@ -471,6 +471,8 @@ export default function Index() {
                 <h3 className="text-sm font-semibold">Result</h3>
                 <div className="flex items-center gap-2">
                   <button
+                    aria-label="Download PDF"
+                    disabled={!result || !!loading}
                     onClick={async () => {
                       if (!result) return;
                       try {
@@ -550,9 +552,9 @@ export default function Index() {
                         toast({ title: "Download failed", description: "Could not generate PDF." });
                       }
                     }}
-                    className="rounded-md bg-primary px-3 py-1 text-sm text-primary-foreground"
+                    className="rounded-full bg-secondary p-2 text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Download PDF
+                    <Download className="h-4 w-4" />
                   </button>
                 </div>
               </div>

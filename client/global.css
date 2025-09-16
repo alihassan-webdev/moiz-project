@@ -184,11 +184,25 @@
 
 /* Yellow side and bottom shadow for cards */
 .card-yellow-shadow {
+  position: relative;
   box-shadow:
     -6px 0 18px hsl(var(--secondary) / 0.35), /* left */
     6px 0 18px hsl(var(--secondary) / 0.35),  /* right */
     0 10px 22px hsl(var(--secondary) / 0.45); /* bottom */
   border-radius: var(--radius);
+}
+/* Mask any residual top glow */
+.card-yellow-shadow::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: hsl(var(--background));
+  pointer-events: none;
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
 }
 .card-yellow-shadow:hover {
   box-shadow:

@@ -100,7 +100,7 @@ const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         <textarea
           className={cn(
             "bg-background flex min-h-[80px] w-full rounded-md px-3 py-2 text-sm",
-            "placeholder:text-gray-400 dark:placeholder:text-gray-500",
+            "placeholder:text-gray-300 dark:placeholder:text-gray-500",
             "disabled:cursor-not-allowed disabled:opacity-50",
             "outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 focus:border-transparent",
             className,

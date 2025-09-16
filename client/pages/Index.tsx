@@ -21,8 +21,10 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
-// API endpoint comes from environment; default to local server route for dev
-const API_URL = (import.meta.env.VITE_PREDICT_ENDPOINT as string) || "/api/generate-questions";
+// API endpoint comes from environment; prefer Netlify dev proxy when running locally
+const API_URL =
+  (import.meta.env.VITE_PREDICT_ENDPOINT as string) ||
+  (import.meta.env.DEV ? '/.netlify/functions/proxy' : '/api/generate-questions');
 
 function ExternalPdfSelector({
   onLoadFile,

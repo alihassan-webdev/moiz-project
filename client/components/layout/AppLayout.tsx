@@ -88,8 +88,8 @@ export function AppLayout({ children }: PropsWithChildren) {
         </Sidebar>
         <SidebarInset>
           <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background px-4">
-            <SidebarTrigger />
-            <div className="font-semibold">Dashboard</div>
+            <SidebarTrigger className={path === "/" ? "hidden" : ""} />
+            {path !== "/" && <div className="font-semibold">Dashboard</div>}
             <div className="ml-auto flex items-center gap-2">
               <Button
                 asChild

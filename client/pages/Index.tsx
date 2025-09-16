@@ -114,7 +114,7 @@ function ExternalPdfSelector({
   };
 
   return (
-    <div className="rounded-md border border-muted/20 bg-card/60 p-4">
+    <div className="rounded-md card-yellow-shadow border border-muted/20 bg-card/60 p-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
         <div>
           <label className="text-xs text-muted-foreground">Class</label>
@@ -167,28 +167,37 @@ function ExternalPdfSelector({
           className={`transition-opacity ${!selectedClass ? "opacity-50 pointer-events-none" : ""}`}
         >
           <label className="text-xs text-muted-foreground">Total Marks</label>
-          <input
-            type="number"
-            min={20}
-            max={100}
-            value={totalMarks ?? ""}
-            placeholder="Enter"
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === "") {
-                setTotalMarks(null);
-                return;
-              }
-              const n = Number(val);
-              if (isNaN(n)) return;
-              const clamped = Math.min(100, Math.max(20, Math.floor(n)));
-              setTotalMarks(clamped);
-            }}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
-            disabled={!selectedClass}
-          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setTotalMarks(30)}
+              disabled={!selectedClass || !!loading}
+              aria-pressed={totalMarks === 30}
+              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 30 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+            >
+              30
+            </button>
+            <button
+              type="button"
+              onClick={() => setTotalMarks(50)}
+              disabled={!selectedClass || !!loading}
+              aria-pressed={totalMarks === 50}
+              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 50 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+            >
+              50
+            </button>
+            <button
+              type="button"
+              onClick={() => setTotalMarks(100)}
+              disabled={!selectedClass || !!loading}
+              aria-pressed={totalMarks === 100}
+              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 100 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+            >
+              100
+            </button>
+          </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Enter marks between 20 and 100
+            Select 30, 50, or 100
           </p>
         </div>
       </div>
@@ -207,10 +216,19 @@ function ExternalPdfSelector({
             const subjectName = found
               ? found.name.replace(/\.pdf$/i, "")
               : selectedSubjectPath || "";
+            if (totalMarks == null) {
+              return toast({
+                title: "Enter total marks",
+                description: "Please enter a value between 20 and 100.",
+              });
+            }
+            // Clamp marks just before generating
+            const marks = Math.min(100, Math.max(20, Number(totalMarks)));
+            if (marks !== totalMarks) setTotalMarks(marks);
             const generated = buildPaperSchemePrompt(
               subjectName,
               selectedClass || "",
-              totalMarks,
+              marks,
             );
             onSetPrompt(generated);
             await onGenerate(generated);
@@ -230,10 +248,14 @@ function ExternalPdfSelector({
         <button
           disabled={loading}
           onClick={() => {
-            // clear selection
+            // clear local selections
+            setSelectedClass("");
             setSelectedSubjectPath("");
-            // clear parent file state
+            setTotalMarks(null);
+            setPromptText("");
+            // clear parent state
             onLoadFile(null);
+            onSetPrompt("");
             onReset();
           }}
           className="rounded-md bg-muted/40 px-3 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
@@ -593,16 +615,18 @@ export default function Index() {
           )}
 
           {/* External controls: Class -> Subject -> Prompt */}
-          <ExternalPdfSelector
-            onLoadFile={(f) => setFile(f)}
-            onSetPrompt={(p) => setQuery(p)}
-            onGenerate={async (p?: string) => await runSubmit(undefined, p)}
-            onReset={onReset}
-            loading={loading}
-          />
+          <div className="w-full max-w-2xl mx-auto">
+            <ExternalPdfSelector
+              onLoadFile={(f) => setFile(f)}
+              onSetPrompt={(p) => setQuery(p)}
+              onGenerate={async (p?: string) => await runSubmit(undefined, p)}
+              onReset={onReset}
+              loading={loading}
+            />
+          </div>
 
           {result && (
-            <div className="mt-4">
+            <div className="mt-4 w-full max-w-2xl mx-auto">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Result</h3>
                 <div className="flex items-center gap-2">
@@ -706,7 +730,7 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="mt-3 rounded-md bg-card/60 p-6 text-base">
+              <div className="mt-3 rounded-md card-yellow-shadow bg-card/60 p-6 text-base">
                 <div
                   className="prose prose-invert prose-lg leading-relaxed max-w-none"
                   dangerouslySetInnerHTML={{

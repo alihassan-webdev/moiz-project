@@ -181,3 +181,37 @@
     height: 0;
   }
 }
+
+/* Yellow side and bottom shadow for cards (no top glow) */
+.card-yellow-shadow {
+  position: relative;
+  border-radius: var(--radius);
+}
+/* Top cover to eliminate any visible top shadow completely */
+.card-yellow-shadow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px; /* cover top edge fully */
+  background: hsl(var(--card) / 0.6); /* match bg-card/60 */
+  border-top-left-radius: var(--radius);
+  border-top-right-radius: var(--radius);
+  pointer-events: none;
+  z-index: 1;
+}
+.card-yellow-shadow::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 16px; /* start below top to avoid any top glow */
+  bottom: -24px; /* increase bottom extension for taller drop */
+  pointer-events: none;
+  border-radius: inherit;
+  /* Bottom-only yellow shadow */
+  box-shadow:
+    0 36px 64px hsl(var(--secondary) / 0.38),
+    /* main bottom */ 0 16px 28px hsl(var(--secondary) / 0.24); /* soft inner */
+}

@@ -610,7 +610,7 @@ export default function Index() {
       </section>
 
       <section className="mx-auto mt-10 max-w-5xl space-y-6">
-        <div className="space-y-4">
+        <div className="flex flex-col gap-4">
           {error && (
             <div className="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive-foreground">
               {error}
@@ -618,7 +618,7 @@ export default function Index() {
           )}
 
           {/* External controls: Class -> Subject -> Prompt */}
-          <div className="w-full max-w-4xl mx-auto">
+          <div className="w-full max-w-4xl mx-auto order-2">
             <ExternalPdfSelector
               onLoadFile={(f) => setFile(f)}
               onSetPrompt={(p) => setQuery(p)}
@@ -629,7 +629,7 @@ export default function Index() {
           </div>
 
           {result && (
-            <div className="mt-4 w-full max-w-2xl mx-auto">
+            <div className="order-1 mt-0 w-full max-w-5xl mx-auto">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Result</h3>
                 <div className="flex items-center gap-2">
@@ -733,7 +733,7 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="mt-3 rounded-xl card-yellow-shadow bg-card/60 p-8 text-base">
+              <div className="mt-3 rounded-xl bg-card/60 p-8 text-base">
                 <div
                   className="prose prose-invert prose-lg leading-relaxed max-w-none"
                   dangerouslySetInnerHTML={{

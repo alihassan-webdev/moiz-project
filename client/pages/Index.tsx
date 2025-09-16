@@ -444,13 +444,10 @@ export default function Index() {
       try {
         const controller = new AbortController();
         const t = setTimeout(() => controller.abort(), timeoutMs);
-        const res = await fetch(urlStr, {
-          method: "OPTIONS",
-          mode: "cors",
-          signal: controller.signal,
-        });
+        const res = await fetch(urlStr, { method: "HEAD", mode: "cors", signal: controller.signal }).catch(() => null);
         clearTimeout(t);
-        return res && (res.ok || res.status === 200 || res.status === 204);
+        // Consider any response (even 404/405) as reachable; network errors return null
+        return !!res;
       } catch (err) {
         return false;
       }

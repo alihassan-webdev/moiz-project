@@ -341,7 +341,7 @@ export default function Index() {
 
       // If direct request failed (CORS or network), try Netlify function proxy then /api/proxy (Vercel)
       if (!res) {
-        const proxies = ["/.netlify/functions/proxy", "/api/proxy"]; // netlify, vercel
+        const proxies = ["/.netlify/functions/proxy", "/api/proxy", "/proxy"]; // netlify, vercel, server fallback
         for (const proxyPath of proxies) {
           // check if proxy path is reachable before sending large multipart payload
           const ok = await checkEndpoint(proxyPath, 2500).catch(() => false);

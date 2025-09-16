@@ -641,7 +641,7 @@ export default function Index() {
           )}
 
           {/* External controls: Class -> Subject -> Prompt */}
-          <div className="w-full max-w-4xl mx-auto order-2">
+          <div className="w-full max-w-4xl mx-auto order-2 sticky top-4 z-20">
             <ExternalPdfSelector
               onLoadFile={(f) => setFile(f)}
               onSetPrompt={(p) => setQuery(p)}

@@ -438,25 +438,37 @@ export default function AnimatedAIChat({
                               .replace(/[^a-z0-9_-]/gi, "_") || "questions";
                           const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
 
-                          // Title
+                          // First page heading: Test Paper Generator
                           doc.setFont('helvetica', 'bold');
-                          doc.setFontSize(20);
-                          doc.text(safeQuery.replace(/_/g, ' '), margin, y);
-                          y += 24;
+                          doc.setFontSize(22);
+                          doc.text('Test Paper Generator', pageWidth / 2, y, { align: 'center' });
+                          y += 30;
 
-                          // Subtitle / metadata
-                          doc.setFontSize(10);
+                          // Subtitle: show the user's prompt as "Here is your: <prompt>"
+                          doc.setFontSize(12);
                           doc.setFont('helvetica', 'normal');
-                          doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
-                          y += 18;
+                          const promptText = (query || '');
+                          const promptDisplay = `Here is your: ${promptText}`;
+                          const promptLines = doc.splitTextToSize(promptDisplay, pageWidth - margin * 2);
+                          doc.text(promptLines, margin, y);
+                          y += promptLines.length * 14 + 8;
 
                           doc.setDrawColor(200);
                           doc.setLineWidth(0.5);
                           doc.line(margin, y, pageWidth - margin, y);
                           y += 12;
 
-                          // Content: parse markdown-like headings and paragraphs
-                          const lines = (result || '').split(/\n/);
+                          // Content: parse markdown-like headings and paragraphs (skip echoing the prompt if present)
+                          const rawLines = (result || '').split(/\n/);
+                          // If the first few lines of result echo the prompt, remove them
+                          let startIndex = 0;
+                          if (rawLines.length > 0) {
+                            const firstLine = rawLines[0].trim().toLowerCase();
+                            if (promptText && firstLine.includes(promptText.toLowerCase())) {
+                              startIndex = 1;
+                            }
+                          }
+                          const lines = rawLines.slice(startIndex);
                           for (let i = 0; i < lines.length; i++) {
                             const line = lines[i].trim();
                             if (!line) {

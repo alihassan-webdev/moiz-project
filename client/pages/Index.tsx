@@ -34,10 +34,17 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
-// API endpoint comes from environment; prefer Netlify dev proxy when running locally
-const API_URL =
-  (import.meta.env.VITE_PREDICT_ENDPOINT as string) ||
-  (import.meta.env.DEV ? "/.netlify/functions/proxy" : "/api/proxy");
+// API endpoint selection: env override > Netlify functions > Vercel/Node API
+const API_URL = (() => {
+  const env = import.meta.env.VITE_PREDICT_ENDPOINT as string | undefined;
+  if (env) return env;
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    const isNetlify = host.includes("netlify.app") || host.includes("netlify");
+    if (isNetlify) return "/.netlify/functions/proxy";
+  }
+  return "/api/proxy";
+})();
 
 function ExternalPdfSelector({
   onLoadFile,

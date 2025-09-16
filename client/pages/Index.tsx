@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import AnimatedAIChat from "@/components/chat/AnimatedAIChat";
 import { toast } from "@/hooks/use-toast";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 type ApiResult = string;
 
@@ -23,6 +25,127 @@ const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 
 // API endpoint comes from environment
 const API_URL = (import.meta.env.VITE_PREDICT_ENDPOINT as string) || "";
+
+function ExternalPdfSelector({
+  onLoadFile,
+  onSetPrompt,
+}: {
+  onLoadFile: (f: File) => void;
+  onSetPrompt: (p: string) => void;
+}) {
+  const pdfModules = import.meta.glob("/datafiles/**/*.pdf", { as: "url", eager: true }) as Record<string, string>;
+  const entries = Object.entries(pdfModules).map(([path, url]) => ({ path, url, name: path.split("/").pop() || "file.pdf" }));
+  const byClass = entries.reduce<Record<string, { path: string; url: string; name: string }[]>>((acc, cur) => {
+    // extract class folder name
+    const m = cur.path.replace(/^\/?datafiles\//, "");
+    const parts = m.split("/");
+    const cls = parts[0] || "Other";
+    if (!acc[cls]) acc[cls] = [];
+    acc[cls].push(cur);
+    return acc;
+  }, {});
+
+  const classOptions = Object.keys(byClass).sort();
+  const [selectedClass, setSelectedClass] = useState<string>(classOptions[0] || "");
+  const [subjectOptions, setSubjectOptions] = useState<{ path: string; url: string; name: string }[]>(
+    selectedClass ? byClass[selectedClass] || [] : []
+  );
+  const [selectedSubjectPath, setSelectedSubjectPath] = useState<string>("");
+  const [promptText, setPromptText] = useState("");
+
+  useEffect(() => {
+    setSubjectOptions(selectedClass ? byClass[selectedClass] || [] : []);
+    setSelectedSubjectPath("");
+  }, [selectedClass]);
+
+  const handleSelectSubject = async (path: string) => {
+    if (!path) return;
+    const found = entries.find((e) => e.path === path);
+    if (!found) return;
+    try {
+      const res = await fetch(found.url);
+      const blob = await res.blob();
+      const f = new File([blob], found.name, { type: "application/pdf" });
+      onLoadFile(f);
+      setSelectedSubjectPath(path);
+    } catch (err) {
+      toast({ title: "Load failed", description: "Could not load PDF." });
+    }
+  };
+
+  return (
+    <div className="rounded-md border border-muted/20 bg-card/60 p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+        <div>
+          <label className="text-xs text-muted-foreground">Class</label>
+          <Select value={selectedClass} onValueChange={(v) => setSelectedClass(v)}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select class" />
+            </SelectTrigger>
+            <SelectContent>
+              {classOptions.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground">Subject</label>
+          <Select value={selectedSubjectPath} onValueChange={(p) => { setSelectedSubjectPath(p); handleSelectSubject(p); }}>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select subject (PDF)" />
+            </SelectTrigger>
+            <SelectContent>
+              {subjectOptions.map((s) => (
+                <SelectItem key={s.path} value={s.path}>
+                  {s.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="sm:col-span-2">
+          <label className="text-xs text-muted-foreground">Prompt</label>
+          <input
+            value={promptText}
+            onChange={(e) => setPromptText(e.target.value)}
+            placeholder="Write prompt e.g. generate 5 mcqs"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={async () => {
+            if (!selectedSubjectPath) return toast({ title: "Select PDF", description: "Please choose a PDF to use." });
+            if (!promptText) return toast({ title: "Missing prompt", description: "Please enter a prompt." });
+            // Ensure subject is loaded (handleSelectSubject already loads and calls onLoadFile)
+            onSetPrompt(promptText);
+          }}
+          className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground"
+        >
+          Use Prompt
+        </button>
+
+        <button
+          onClick={() => {
+            // clear selection
+            setSelectedSubjectPath("");
+            setPromptText("");
+          }}
+          className="rounded-md bg-muted/40 px-3 py-2 text-sm"
+        >
+          Clear
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export default function Index() {
   const [file, setFile] = useState<File | null>(null);
@@ -271,10 +394,18 @@ export default function Index() {
               {error}
             </div>
           )}
+
+          {/* External controls: Class -> Subject -> Prompt */}
+          <ExternalPdfSelector
+            onLoadFile={(f) => setFile(f)}
+            onSetPrompt={(p) => setQuery(p)}
+          />
+
           <AnimatedAIChat
             loading={loading}
             result={result}
             query={query}
+            externalFile={file}
             onReset={onReset}
             onSubmit={async ({ file: f, query: q }) => {
               if (f) setFile(f);

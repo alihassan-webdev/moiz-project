@@ -258,7 +258,7 @@ export default function Index() {
       }
 
       const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(new Error("timeout")), timeoutMs);
+      const t = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
         console.debug("Attempting fetch ->", finalUrl, { isExternal });

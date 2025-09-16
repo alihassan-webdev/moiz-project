@@ -397,29 +397,9 @@ export default function Index() {
             onReset={onReset}
           />
 
-          <div className="mt-4">
-            <div className="flex gap-2">
-              <button
-                onClick={async () => {
-                  if (!loading) await runSubmit();
-                }}
-                className="rounded-md bg-secondary px-4 py-2 text-sm text-secondary-foreground"
-              >
-                Generate
-              </button>
-
-              <button
-                onClick={onReset}
-                className="rounded-md bg-muted/40 px-4 py-2 text-sm"
-              >
-                Reset
-              </button>
-            </div>
-
-            {result && (
-              <pre className="whitespace-pre-wrap mt-4 rounded-md bg-card/60 p-4 text-sm">{result}</pre>
-            )}
-          </div>
+          {result && (
+            <pre className="whitespace-pre-wrap mt-4 rounded-md bg-card/60 p-4 text-sm">{result}</pre>
+          )}
         </div>
       </section>
     </div>

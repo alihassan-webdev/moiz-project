@@ -171,6 +171,7 @@ function ExternalPdfSelector({
             type="number"
             min={20}
             max={100}
+            step={1}
             value={totalMarks ?? ""}
             placeholder="Enter"
             onChange={(e) => {
@@ -183,6 +184,14 @@ function ExternalPdfSelector({
               if (isNaN(n)) return;
               const clamped = Math.min(100, Math.max(20, Math.floor(n)));
               setTotalMarks(clamped);
+            }}
+            onBlur={(e) => {
+              const val = e.target.value;
+              if (val === "") return;
+              const n = Number(val);
+              if (isNaN(n)) return;
+              const clamped = Math.min(100, Math.max(20, Math.floor(n)));
+              if (clamped !== n) setTotalMarks(clamped);
             }}
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
             disabled={!selectedClass}

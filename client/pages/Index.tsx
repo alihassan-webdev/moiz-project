@@ -116,6 +116,16 @@ function ExternalPdfSelector({
           </Select>
         </div>
 
+        <div>
+          <label className="text-xs text-muted-foreground">Total Marks</label>
+          <input
+            type="number"
+            min={1}
+            value={totalMarks}
+            onChange={(e) => setTotalMarks(Number(e.target.value) || 0)}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
+          />
+        </div>
       </div>
 
       <div className="mt-3 flex gap-2">
@@ -123,6 +133,10 @@ function ExternalPdfSelector({
           onClick={async () => {
             if (!selectedSubjectPath) return toast({ title: "Select PDF", description: "Please choose a PDF to use." });
             // Ensure subject is loaded (handleSelectSubject already loads and calls onLoadFile)
+            const found = entries.find((e) => e.path === selectedSubjectPath);
+            const subjectName = found ? found.name.replace(/\.pdf$/i, "") : selectedSubjectPath || "";
+            const generated = buildPaperSchemePrompt(subjectName, selectedClass || "", totalMarks);
+            onSetPrompt(generated);
             await onGenerate();
           }}
           className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground"

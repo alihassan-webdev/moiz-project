@@ -77,7 +77,7 @@ function ExternalPdfSelector({
 
   return (
     <div className="rounded-md border border-muted/20 bg-card/60 p-4">
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
         <div>
           <label className="text-xs text-muted-foreground">Class</label>
           <Select value={selectedClass} onValueChange={(v) => setSelectedClass(v)}>

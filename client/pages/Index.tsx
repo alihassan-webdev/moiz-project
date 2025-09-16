@@ -443,7 +443,7 @@ export default function Index() {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
 
-  // Very small formatter: convert **bold** to <strong>, headings like 'Section' to <h3>, 'Qn.' to <p><strong>
+  // Enhanced formatter: convert **bold** to <strong>, headings to styled h3, questions to larger bold lines, options styled, and spacing increased
   const formatResultHtml = (txt: string) => {
     if (!txt) return "";
     // Escape first
@@ -452,25 +452,24 @@ export default function Index() {
     // Convert bold **text**
     out = out.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
-    // Headings: lines starting with Section or Section A/B/C
-    out = out.replace(/^\s*(Section\s+[A-Z].*)$/gim, "<h3>$1</h3>");
-    out = out.replace(/^\s*(Section\s+[0-9]+[:\-].*)$/gim, "<h3>$1</h3>");
+    // Headings: lines starting with Section or Section A/B/C -> styled h3
+    out = out.replace(/^\s*(Section\s+[A-Z0-9\-–].*)$/gim, "<h3 class=\"text-xl font-bold mb-3\">$1</h3>");
 
-    // Convert lines that look like 'Q1.' or 'Q16.' at line start
-    out = out.replace(/^\s*(Q\d+\.)\s*(.*)$/gim, "<p><strong>$1</strong> $2</p>");
+    // Convert lines that look like 'Q1.' or 'Q16.' at line start -> larger bold question line
+    out = out.replace(/^\s*(Q\d+\.)\s*(.*)$/gim, "<p class=\"text-lg font-semibold mb-3\"><strong>$1</strong> $2</p>");
 
-    // Convert MCQ option lines like 'a) text' to <div class="option"><strong>a)</strong> text</div>
-    out = out.replace(/^\s*([a-d])\)\s*(.*)$/gim, "<div class=\"option\"><strong>$1)</strong> $2</div>");
+    // Convert MCQ option lines like 'a) text' to styled option lines
+    out = out.replace(/^\s*([a-d])\)\s*(.*)$/gim, "<div class=\"ml-6 mb-2 text-base\"><strong class=\"mr-2\">$1)</strong>$2</div>");
 
-    // Paragraphs: two or more newlines -> paragraph break
-    out = out.replace(/\n{2,}/g, "</p><p>");
+    // Paragraphs: two or more newlines -> paragraph break with spacing
+    out = out.replace(/\n{2,}/g, "</p><p class=\"mb-4\">");
 
     // Single newlines -> line break
     out = out.replace(/\n/g, "<br />");
 
     // Wrap with a paragraph if not already
     if (!out.startsWith("<h3>") && !out.startsWith("<p>")) {
-      out = `<p>${out}</p>`;
+      out = `<p class=\"mb-4\">${out}</p>`;
     }
 
     return out;

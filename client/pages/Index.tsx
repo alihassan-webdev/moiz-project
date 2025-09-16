@@ -114,7 +114,7 @@ function ExternalPdfSelector({
   };
 
   return (
-    <div className="rounded-md border border-muted/20 bg-card/60 p-4">
+    <div className="rounded-md card-yellow-shadow border border-muted/20 bg-card/60 p-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
         <div>
           <label className="text-xs text-muted-foreground">Class</label>
@@ -728,7 +728,7 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="mt-3 rounded-md bg-card/60 p-6 text-base">
+              <div className="mt-3 rounded-md card-yellow-shadow bg-card/60 p-6 text-base">
                 <div
                   className="prose prose-invert prose-lg leading-relaxed max-w-none"
                   dangerouslySetInnerHTML={{

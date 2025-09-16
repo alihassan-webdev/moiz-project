@@ -181,3 +181,19 @@
     height: 0;
   }
 }
+
+/* Yellow side and bottom shadow for cards */
+.card-yellow-shadow {
+  box-shadow:
+    -6px 0 18px hsl(var(--secondary) / 0.35), /* left */
+    6px 0 18px hsl(var(--secondary) / 0.35),  /* right */
+    0 10px 22px hsl(var(--secondary) / 0.45); /* bottom */
+  border-radius: var(--radius);
+}
+.card-yellow-shadow:hover {
+  box-shadow:
+    -8px 0 22px hsl(var(--secondary) / 0.45),
+    8px 0 22px hsl(var(--secondary) / 0.45),
+    0 14px 28px hsl(var(--secondary) / 0.55);
+  transition: box-shadow 0.2s ease-in-out;
+}

@@ -522,7 +522,35 @@ export default function AnimatedAIChat({
                             // Also remove an immediately following empty line if present
                             if (rawLines[startIndex] && rawLines[startIndex].trim() === '') startIndex++;
                           }
-                          const lines = rawLines.slice(startIndex).filter((l) => !/(<attachment\b|<\/attachment>|Here are the urls of the attachments|Only use these if|cdn\.builder\.io)/i.test(l));
+                          let lines = rawLines.slice(startIndex).filter((l) => !/(<attachment\b|<\/attachment>|Here are the urls of the attachments|Only use these if|cdn\.builder\.io)/i.test(l));
+
+                          // Remove leading summary/echo lines like "Here are 5 MCQs..." to avoid duplication
+                          const normalize = (s: string) =>
+                            s
+                              .toLowerCase()
+                              .replace(/["'\-:,()\.]/g, " ")
+                              .replace(/[^a-z0-9\s]/g, " ")
+                              .replace(/\s+/g, " ")
+                              .trim();
+
+                          const summaryNormalized = normalize(summaryLine || '');
+
+                          while (lines.length) {
+                            const first = lines[0].trim();
+                            const norm = normalize(first);
+                            // Remove if it exactly matches the generated summary, or if it's a short variant starting with "here are" mentioning mcq/fill
+                            if (
+                              norm === summaryNormalized ||
+                              (/^here are\b/.test(norm) && /(mcq|multiple|fill|fill in|fillintheblank|fillintheblanks|fill-in)/.test(norm))
+                            ) {
+                              lines.shift();
+                              // also drop immediate blank lines
+                              if (lines[0] && lines[0].trim() === '') lines.shift();
+                              continue;
+                            }
+                            break;
+                          }
+
                           for (let i = 0; i < lines.length; i++) {
                             const line = lines[i].trim();
                             if (!line) {

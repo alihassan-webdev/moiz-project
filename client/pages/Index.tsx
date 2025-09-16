@@ -413,7 +413,7 @@ export default function Index() {
           <ExternalPdfSelector
             onLoadFile={(f) => setFile(f)}
             onSetPrompt={(p) => setQuery(p)}
-            onGenerate={async () => await runSubmit()}
+            onGenerate={async (p?: string) => await runSubmit(undefined, p)}
             onReset={onReset}
           />
 

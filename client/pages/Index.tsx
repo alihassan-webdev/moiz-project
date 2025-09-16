@@ -615,16 +615,18 @@ export default function Index() {
           )}
 
           {/* External controls: Class -> Subject -> Prompt */}
-          <ExternalPdfSelector
-            onLoadFile={(f) => setFile(f)}
-            onSetPrompt={(p) => setQuery(p)}
-            onGenerate={async (p?: string) => await runSubmit(undefined, p)}
-            onReset={onReset}
-            loading={loading}
-          />
+          <div className="w-full max-w-2xl ml-auto">
+            <ExternalPdfSelector
+              onLoadFile={(f) => setFile(f)}
+              onSetPrompt={(p) => setQuery(p)}
+              onGenerate={async (p?: string) => await runSubmit(undefined, p)}
+              onReset={onReset}
+              loading={loading}
+            />
+          </div>
 
           {result && (
-            <div className="mt-4">
+            <div className="mt-4 w-full max-w-2xl ml-auto">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Result</h3>
                 <div className="flex items-center gap-2">

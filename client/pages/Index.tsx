@@ -255,26 +255,51 @@ export default function Index() {
     const sendTo = async (urlStr: string, timeoutMs: number) => {
       const isExternal = /^https?:/i.test(urlStr);
 
-      const form = new FormData();
-      form.append("pdf", theFile);
-      form.append("query", q);
-      // External APIs may expect the field name "file"; include both for compatibility
-      if (isExternal) {
-        form.append("file", theFile);
-      }
-
       let finalUrl = urlStr;
+      // If external and a query is provided, attach as query param for compatibility
       if (isExternal && q) {
-        const u = new URL(urlStr);
-        u.searchParams.set("query", q);
-        finalUrl = u.toString();
+        try {
+          const u = new URL(urlStr);
+          u.searchParams.set("query", q);
+          finalUrl = u.toString();
+        } catch {}
       }
 
       const controller = new AbortController();
       const t = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        console.debug("Attempting fetch ->", finalUrl, { isExternal });
+        console.debug("Attempting fetch ->", finalUrl, { isExternal, hasFile: !!theFile });
+        // If no file attached, send a lightweight JSON body with the query only
+        if (!theFile) {
+          const res = await fetch(finalUrl, {
+            method: "POST",
+            signal: controller.signal,
+            headers: {
+              Accept: "application/json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ query: q }),
+            ...(isExternal
+              ? {
+                  mode: "cors" as const,
+                  credentials: "omit" as const,
+                  referrerPolicy: "no-referrer" as const,
+                }
+              : {}),
+          });
+          return res;
+        }
+
+        // Otherwise send multipart form with the PDF
+        const form = new FormData();
+        form.append("pdf", theFile);
+        form.append("query", q);
+        // External APIs may expect the field name "file"; include both for compatibility
+        if (isExternal) {
+          form.append("file", theFile);
+        }
+
         const res = await fetch(finalUrl, {
           method: "POST",
           body: form,

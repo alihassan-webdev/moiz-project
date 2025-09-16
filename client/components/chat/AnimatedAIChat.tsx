@@ -531,6 +531,17 @@ export default function AnimatedAIChat({
                             }
                           }
 
+                          // Add watermark/footer on each page
+                          const pageCount = doc.getNumberOfPages();
+                          for (let i = 1; i <= pageCount; i++) {
+                            doc.setPage(i);
+                            doc.setFont('helvetica', 'normal');
+                            doc.setFontSize(10);
+                            doc.setTextColor(150);
+                            const footerY = doc.internal.pageSize.getHeight() - 24;
+                            doc.text('Test Paper Generater', doc.internal.pageSize.getWidth() / 2, footerY, { align: 'center' });
+                          }
+
                           doc.save(filename);
                         } catch (err) {
                           console.error('PDF generation failed', err);

@@ -15,7 +15,13 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import * as React from "react";
 import { toast } from "@/hooks/use-toast";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 type Props = {
   onSubmit: (args: {
@@ -260,8 +266,8 @@ export default function AnimatedAIChat({
     if (!externalFile) {
       setFile((prev) => prev ?? null);
     }
-  // intentionally only run when externalFile changes
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // intentionally only run when externalFile changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [externalFile]);
 
   const commandSuggestions: CommandSuggestion[] = [
@@ -371,7 +377,10 @@ export default function AnimatedAIChat({
   };
 
   const pdfOptions = React.useMemo(() => {
-    const modules = import.meta.glob("/datafiles/*.pdf", { as: "url", eager: true }) as Record<string, string>;
+    const modules = import.meta.glob("/datafiles/*.pdf", {
+      as: "url",
+      eager: true,
+    }) as Record<string, string>;
     const entries = Object.entries(modules).map(([path, url]) => ({
       path,
       url,
@@ -390,17 +399,22 @@ export default function AnimatedAIChat({
       const res = await fetch(found.url);
       const blob = await res.blob();
       if (blob.size > MAX_SIZE) {
-        toast({ title: "File too large", description: "Please select a PDF up to 15MB." });
+        toast({
+          title: "File too large",
+          description: "Please select a PDF up to 15MB.",
+        });
         return;
       }
       const f = new File([blob], found.name, { type: "application/pdf" });
       setFile(f);
       setSelectedPdfPath(path);
     } catch (e) {
-      toast({ title: "Load failed", description: "Could not load the selected PDF." });
+      toast({
+        title: "Load failed",
+        description: "Could not load the selected PDF.",
+      });
     }
   };
-
 
   const removeAttachment = () => {
     setFile(null);
@@ -922,7 +936,10 @@ export default function AnimatedAIChat({
 
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
                 <div className="flex items-center gap-3">
-                  <Select value={selectedPdfPath} onValueChange={handleSelectPdf}>
+                  <Select
+                    value={selectedPdfPath}
+                    onValueChange={handleSelectPdf}
+                  >
                     <SelectTrigger className="w-[240px]">
                       <SelectValue placeholder="Select PDF from datafiles" />
                     </SelectTrigger>

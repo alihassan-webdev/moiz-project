@@ -1,6 +1,18 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { toast } from "@/hooks/use-toast";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { Download } from "lucide-react";
 
 type ApiResult = string;
@@ -25,7 +37,9 @@ const MAX_SIZE = 15 * 1024 * 1024; // 15MB
 // API endpoint comes from environment; prefer Netlify dev proxy when running locally
 const API_URL =
   (import.meta.env.VITE_PREDICT_ENDPOINT as string) ||
-  (import.meta.env.DEV ? '/.netlify/functions/proxy' : '/api/generate-questions');
+  (import.meta.env.DEV
+    ? "/.netlify/functions/proxy"
+    : "/api/generate-questions");
 
 function ExternalPdfSelector({
   onLoadFile,
@@ -40,9 +54,18 @@ function ExternalPdfSelector({
   onReset: () => void;
   loading?: boolean;
 }) {
-  const pdfModules = import.meta.glob("/datafiles/**/*.pdf", { as: "url", eager: true }) as Record<string, string>;
-  const entries = Object.entries(pdfModules).map(([path, url]) => ({ path, url, name: path.split("/").pop() || "file.pdf" }));
-  const byClass = entries.reduce<Record<string, { path: string; url: string; name: string }[]>>((acc, cur) => {
+  const pdfModules = import.meta.glob("/datafiles/**/*.pdf", {
+    as: "url",
+    eager: true,
+  }) as Record<string, string>;
+  const entries = Object.entries(pdfModules).map(([path, url]) => ({
+    path,
+    url,
+    name: path.split("/").pop() || "file.pdf",
+  }));
+  const byClass = entries.reduce<
+    Record<string, { path: string; url: string; name: string }[]>
+  >((acc, cur) => {
     // extract class folder name
     const m = cur.path.replace(/^\/?datafiles\//, "");
     const parts = m.split("/");
@@ -54,12 +77,18 @@ function ExternalPdfSelector({
 
   const classOptions = Object.keys(byClass).sort();
   const [selectedClass, setSelectedClass] = useState<string>("");
-  const [subjectOptions, setSubjectOptions] = useState<{ path: string; url: string; name: string }[]>([]);
+  const [subjectOptions, setSubjectOptions] = useState<
+    { path: string; url: string; name: string }[]
+  >([]);
   const [selectedSubjectPath, setSelectedSubjectPath] = useState<string>("");
   const [totalMarks, setTotalMarks] = useState<number | null>(null);
   const [promptText, setPromptText] = useState("");
 
-  const buildPaperSchemePrompt = (subjectName: string, cls: string, marks: number) => {
+  const buildPaperSchemePrompt = (
+    subjectName: string,
+    cls: string,
+    marks: number,
+  ) => {
     // Build a prompt that asks the AI to generate a full exam paper (questions, not just scheme)
     return `Generate a complete exam-style question paper for Class ${cls} in the subject "${subjectName}" of total ${marks} marks.\n\nStructure requirements:\n1) Section A - MCQs: allocate between 10% and 20% of total marks to MCQs. Each MCQ should be 1 mark and include four options labeled a), b), c), d). Number all MCQs sequentially (Q1, Q2, ...).\n2) Section B - Short Questions: allocate between 30% and 40% of total marks. Each short question should be 4 or 5 marks. Number questions sequentially continuing from MCQs.\n3) Section C - Long Questions: allocate between 30% and 40% of total marks. Each long question should be 8 to 10 marks. Number questions sequentially continuing from Section B.\n\nContent and formatting instructions:\n- Provide actual question text for every item (do NOT output only a scheme).\n- For MCQs include clear options (a/b/c/d) and ensure only one correct option logically exists (do NOT reveal answers).\n- Short and long questions should be clear, exam-style (descriptive, conceptual or numerical as appropriate), and require the indicated length of answer.\n- Use headings exactly: "Section A - MCQs", "Section B - Short Questions", "Section C - Long Questions".\n- Use numbering like Q1, Q2, Q3 ... across the paper.\n- Ensure the marks per question and number of questions sum exactly to the total ${marks} marks. If multiple valid distributions exist, choose a balanced distribution that fits the percentage ranges and explain the distribution briefly at the top in one line.\n- Do NOT provide answers or solutions.\n- Keep layout professional and easy to read (use line breaks, headings, and spacing similar to an exam paper).\n\nOutput only the exam paper text (no metadata, no commentary).`;
   };
@@ -89,7 +118,10 @@ function ExternalPdfSelector({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
         <div>
           <label className="text-xs text-muted-foreground">Class</label>
-          <Select value={selectedClass} onValueChange={(v) => setSelectedClass(v)}>
+          <Select
+            value={selectedClass}
+            onValueChange={(v) => setSelectedClass(v)}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select class" />
             </SelectTrigger>
@@ -103,11 +135,23 @@ function ExternalPdfSelector({
           </Select>
         </div>
 
-        <div className={`transition-opacity ${!selectedClass ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div
+          className={`transition-opacity ${!selectedClass ? "opacity-50 pointer-events-none" : ""}`}
+        >
           <label className="text-xs text-muted-foreground">Subject</label>
-          <Select value={selectedSubjectPath} onValueChange={(p) => { setSelectedSubjectPath(p); handleSelectSubject(p); }}>
+          <Select
+            value={selectedSubjectPath}
+            onValueChange={(p) => {
+              setSelectedSubjectPath(p);
+              handleSelectSubject(p);
+            }}
+          >
             <SelectTrigger className="w-full" disabled={!selectedClass}>
-              <SelectValue placeholder={selectedClass ? "Select subject (PDF)" : "Select class first"} />
+              <SelectValue
+                placeholder={
+                  selectedClass ? "Select subject (PDF)" : "Select class first"
+                }
+              />
             </SelectTrigger>
             <SelectContent>
               {subjectOptions.map((s) => (
@@ -119,7 +163,9 @@ function ExternalPdfSelector({
           </Select>
         </div>
 
-        <div className={`transition-opacity ${!selectedClass ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div
+          className={`transition-opacity ${!selectedClass ? "opacity-50 pointer-events-none" : ""}`}
+        >
           <label className="text-xs text-muted-foreground">Total Marks</label>
           <input
             type="number"
@@ -141,7 +187,9 @@ function ExternalPdfSelector({
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
             disabled={!selectedClass}
           />
-          <p className="text-xs text-muted-foreground mt-1">Enter marks between 20 and 100</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Enter marks between 20 and 100
+          </p>
         </div>
       </div>
 
@@ -149,11 +197,21 @@ function ExternalPdfSelector({
         <button
           disabled={loading}
           onClick={async () => {
-            if (!selectedSubjectPath) return toast({ title: "Select PDF", description: "Please choose a PDF to use." });
+            if (!selectedSubjectPath)
+              return toast({
+                title: "Select PDF",
+                description: "Please choose a PDF to use.",
+              });
             // Ensure subject is loaded (handleSelectSubject already loads and calls onLoadFile)
             const found = entries.find((e) => e.path === selectedSubjectPath);
-            const subjectName = found ? found.name.replace(/\.pdf$/i, "") : selectedSubjectPath || "";
-            const generated = buildPaperSchemePrompt(subjectName, selectedClass || "", totalMarks);
+            const subjectName = found
+              ? found.name.replace(/\.pdf$/i, "")
+              : selectedSubjectPath || "";
+            const generated = buildPaperSchemePrompt(
+              subjectName,
+              selectedClass || "",
+              totalMarks,
+            );
             onSetPrompt(generated);
             await onGenerate(generated);
           }}
@@ -282,7 +340,10 @@ export default function Index() {
       const t = setTimeout(() => controller.abort(), timeoutMs);
 
       try {
-        console.debug("Attempting fetch ->", finalUrl, { isExternal, hasFile: !!theFile });
+        console.debug("Attempting fetch ->", finalUrl, {
+          isExternal,
+          hasFile: !!theFile,
+        });
         // If no file attached, send a lightweight JSON body with the query only
         if (!theFile) {
           const res = await fetch(finalUrl, {
@@ -331,9 +392,16 @@ export default function Index() {
         try {
           if (err?.name === "AbortError") {
             console.warn("Fetch aborted:", finalUrl, err?.message ?? err);
-          } else if (err?.message === "Failed to fetch" || err?.name === "TypeError") {
+          } else if (
+            err?.message === "Failed to fetch" ||
+            err?.name === "TypeError"
+          ) {
             // Likely network or CORS
-            console.warn("Network or CORS error when fetching:", finalUrl, err?.message ?? err);
+            console.warn(
+              "Network or CORS error when fetching:",
+              finalUrl,
+              err?.message ?? err,
+            );
           } else {
             console.warn("Fetch error:", finalUrl, err?.message ?? err);
           }
@@ -398,7 +466,7 @@ export default function Index() {
       if (!res) {
         // If we get here, it likely failed due to CORS or network. Provide a helpful error.
         throw new Error(
-          "Network or CORS error. If deployed on Netlify set VITE_PREDICT_ENDPOINT='/.netlify/functions/proxy' and PREDICT_ENDPOINT='https://api-va5v.onrender.com', or on Vercel set VITE_PREDICT_ENDPOINT='/api/proxy' and PREDICT_ENDPOINT='https://api-va5v.onrender.com'. Alternatively, enable CORS on the API."
+          "Network or CORS error. If deployed on Netlify set VITE_PREDICT_ENDPOINT='/.netlify/functions/proxy' and PREDICT_ENDPOINT='https://api-va5v.onrender.com', or on Vercel set VITE_PREDICT_ENDPOINT='/api/proxy' and PREDICT_ENDPOINT='https://api-va5v.onrender.com'. Alternatively, enable CORS on the API.",
         );
       }
 
@@ -418,11 +486,17 @@ export default function Index() {
           const text =
             typeof json === "string"
               ? json
-              : (json?.questions ?? json?.result ?? json?.message ?? JSON.stringify(json, null, 2));
+              : (json?.questions ??
+                json?.result ??
+                json?.message ??
+                JSON.stringify(json, null, 2));
           setResult(String(text));
         } catch (e) {
           // fallback if json parsing fails
-          const txt = await res.clone().text().catch(() => "");
+          const txt = await res
+            .clone()
+            .text()
+            .catch(() => "");
           setResult(txt);
         }
       } else {
@@ -465,16 +539,25 @@ export default function Index() {
     out = out.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
 
     // Headings: lines starting with Section or Section A/B/C -> styled h3
-    out = out.replace(/^\s*(Section\s+[A-Z0-9\-–].*)$/gim, "<h3 class=\"text-xl font-bold mb-3\">$1</h3>");
+    out = out.replace(
+      /^\s*(Section\s+[A-Z0-9\-–].*)$/gim,
+      '<h3 class="text-xl font-bold mb-3">$1</h3>',
+    );
 
     // Convert lines that look like 'Q1.' or 'Q16.' at line start -> larger bold question line
-    out = out.replace(/^\s*(Q\d+\.)\s*(.*)$/gim, "<p class=\"text-lg font-semibold mb-3\"><strong>$1</strong> $2</p>");
+    out = out.replace(
+      /^\s*(Q\d+\.)\s*(.*)$/gim,
+      '<p class="text-lg font-semibold mb-3"><strong>$1</strong> $2</p>',
+    );
 
     // Convert MCQ option lines like 'a) text' to styled option lines
-    out = out.replace(/^\s*([a-d])\)\s*(.*)$/gim, "<div class=\"ml-6 mb-2 text-base\"><strong class=\"mr-2\">$1)</strong>$2</div>");
+    out = out.replace(
+      /^\s*([a-d])\)\s*(.*)$/gim,
+      '<div class="ml-6 mb-2 text-base"><strong class="mr-2">$1)</strong>$2</div>',
+    );
 
     // Paragraphs: two or more newlines -> paragraph break with spacing
-    out = out.replace(/\n{2,}/g, "</p><p class=\"mb-4\">");
+    out = out.replace(/\n{2,}/g, '</p><p class="mb-4">');
 
     // Single newlines -> line break
     out = out.replace(/\n/g, "<br />");
@@ -575,7 +658,9 @@ export default function Index() {
 
                         doc.setFont("helvetica", "bold");
                         doc.setFontSize(22);
-                        doc.text("Test Paper Generator", pageWidth / 2, y, { align: "center" });
+                        doc.text("Test Paper Generator", pageWidth / 2, y, {
+                          align: "center",
+                        });
                         y += 30;
 
                         const promptText = (query || "").trim();
@@ -588,9 +673,15 @@ export default function Index() {
                         const lines = (result || "").split(/\n/);
                         doc.setFontSize(11);
                         for (const line of lines) {
-                          const split = doc.splitTextToSize(line, pageWidth - margin * 2);
+                          const split = doc.splitTextToSize(
+                            line,
+                            pageWidth - margin * 2,
+                          );
                           for (const s of split) {
-                            if (y > doc.internal.pageSize.getHeight() - margin) {
+                            if (
+                              y >
+                              doc.internal.pageSize.getHeight() - margin
+                            ) {
                               doc.addPage();
                               y = margin;
                             }
@@ -602,7 +693,10 @@ export default function Index() {
                         doc.save(filename);
                       } catch (err) {
                         console.error(err);
-                        toast({ title: "Download failed", description: "Could not generate PDF." });
+                        toast({
+                          title: "Download failed",
+                          description: "Could not generate PDF.",
+                        });
                       }
                     }}
                     className="rounded-full bg-secondary p-2 text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed"
@@ -615,7 +709,9 @@ export default function Index() {
               <div className="mt-3 rounded-md bg-card/60 p-6 text-base">
                 <div
                   className="prose prose-invert prose-lg leading-relaxed max-w-none"
-                  dangerouslySetInnerHTML={{ __html: formatResultHtml(result || "") }}
+                  dangerouslySetInnerHTML={{
+                    __html: formatResultHtml(result || ""),
+                  }}
                 />
               </div>
             </div>

@@ -103,11 +103,11 @@ function ExternalPdfSelector({
           </Select>
         </div>
 
-        <div>
+        <div className={`transition-opacity ${!selectedClass ? 'opacity-50 pointer-events-none' : ''}`}>
           <label className="text-xs text-muted-foreground">Subject</label>
           <Select value={selectedSubjectPath} onValueChange={(p) => { setSelectedSubjectPath(p); handleSelectSubject(p); }}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select subject (PDF)" />
+            <SelectTrigger className="w-full" disabled={!selectedClass}>
+              <SelectValue placeholder={selectedClass ? "Select subject (PDF)" : "Select class first"} />
             </SelectTrigger>
             <SelectContent>
               {subjectOptions.map((s) => (

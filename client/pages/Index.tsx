@@ -364,21 +364,29 @@ export default function Index() {
 
       const contentType = res.headers.get("content-type") || "";
       if (!res.ok) {
-        const detail = await res.text();
+        let detail = "";
+        try {
+          detail = await res.clone().text();
+        } catch (e) {
+          detail = res.statusText || "";
+        }
         throw new Error(detail || `HTTP ${res.status}`);
       }
       if (contentType.includes("application/json")) {
-        const json = await res.json();
-        const text =
-          typeof json === "string"
-            ? json
-            : (json?.questions ??
-              json?.result ??
-              json?.message ??
-              JSON.stringify(json, null, 2));
-        setResult(String(text));
+        try {
+          const json = await res.clone().json();
+          const text =
+            typeof json === "string"
+              ? json
+              : (json?.questions ?? json?.result ?? json?.message ?? JSON.stringify(json, null, 2));
+          setResult(String(text));
+        } catch (e) {
+          // fallback if json parsing fails
+          const txt = await res.clone().text().catch(() => "");
+          setResult(txt);
+        }
       } else {
-        const text = await res.text();
+        const text = await res.clone().text();
         setResult(text);
       }
     } catch (err: any) {

@@ -137,7 +137,7 @@ function ExternalPdfSelector({
             const subjectName = found ? found.name.replace(/\.pdf$/i, "") : selectedSubjectPath || "";
             const generated = buildPaperSchemePrompt(subjectName, selectedClass || "", totalMarks);
             onSetPrompt(generated);
-            await onGenerate();
+            await onGenerate(generated);
           }}
           className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground"
         >

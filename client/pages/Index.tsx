@@ -110,15 +110,6 @@ function ExternalPdfSelector({
           </Select>
         </div>
 
-        <div className="sm:col-span-2">
-          <label className="text-xs text-muted-foreground">Prompt</label>
-          <input
-            value={promptText}
-            onChange={(e) => setPromptText(e.target.value)}
-            placeholder="Write prompt e.g. generate 5 mcqs"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none"
-          />
-        </div>
       </div>
 
       <div className="mt-3 flex gap-2">

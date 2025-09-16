@@ -93,7 +93,16 @@ interface TextareaProps
 }
 
 const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, containerClassName, showRing = true, typing = false, ...props }, ref) => {
+  (
+    {
+      className,
+      containerClassName,
+      showRing = true,
+      typing = false,
+      ...props
+    },
+    ref,
+  ) => {
     const [isFocused, setIsFocused] = React.useState(false);
 
     return (
@@ -146,27 +155,44 @@ const InnerTextarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
 InnerTextarea.displayName = "Textarea";
 
 function escapeHtml(str: string) {
-  return str.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;');
+  return str
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
 }
 
 function formatResponse(raw: string) {
   // Remove attachment blocks and helper notes (user-uploaded attachment URLs)
-  let cleaned = raw || '';
+  let cleaned = raw || "";
   // Remove any <attachment>...</attachment> blocks
-  cleaned = cleaned.replace(/<attachment[\s\S]*?<\/attachment>/gi, '');
+  cleaned = cleaned.replace(/<attachment[\s\S]*?<\/attachment>/gi, "");
   // Remove lines that mention attachment URLs or instructions about attachments
   cleaned = cleaned
-    .split('\n')
-    .filter((ln) => !/(here are the urls of the attachments|only use these if|attachments the user is working on|cdn\.builder\.io)/i.test(ln.trim()))
-    .join('\n');
+    .split("\n")
+    .filter(
+      (ln) =>
+        !/(here are the urls of the attachments|only use these if|attachments the user is working on|cdn\.builder\.io)/i.test(
+          ln.trim(),
+        ),
+    )
+    .join("\n");
 
   // Escape HTML first
   let s = escapeHtml(cleaned);
 
   // Convert markdown headings (#, ##, ###) at line starts with spacing
-  s = s.replace(/^###\s*(.+)$/gim, '<h3 class="font-semibold text-lg mt-6 mb-2">$1</h3>');
-  s = s.replace(/^##\s*(.+)$/gim, '<h2 class="font-semibold text-xl mt-6 mb-3">$1</h2>');
-  s = s.replace(/^#\s*(.+)$/gim, '<h1 class="font-semibold text-2xl md:text-3xl mt-6 mb-3">$1</h1>');
+  s = s.replace(
+    /^###\s*(.+)$/gim,
+    '<h3 class="font-semibold text-lg mt-6 mb-2">$1</h3>',
+  );
+  s = s.replace(
+    /^##\s*(.+)$/gim,
+    '<h2 class="font-semibold text-xl mt-6 mb-3">$1</h2>',
+  );
+  s = s.replace(
+    /^#\s*(.+)$/gim,
+    '<h1 class="font-semibold text-2xl md:text-3xl mt-6 mb-3">$1</h1>',
+  );
 
   // Bold **text** -> strong
   s = s.replace(/\*\*(.+?)\*\*/g, '<strong class="font-semibold">$1</strong>');
@@ -177,20 +203,23 @@ function formatResponse(raw: string) {
   // Wrap consecutive <li> into <ul class="list-disc pl-6 mb-4">
   s = s.replace(/(?:\s*<li class="mb-2">.*?<\/li>\s*)+/gms, (match) => {
     const items = match.match(/<li class="mb-2">.*?<\/li>/gms) || [];
-    return `<ul class="list-disc pl-6 mb-4">${items.join('')}</ul>`;
+    return `<ul class="list-disc pl-6 mb-4">${items.join("")}</ul>`;
   });
 
   // Normalize paragraphs: split by two or more newlines
-  const parts = s.split(/\n{2,}/g).map((p) => p.trim()).filter(Boolean);
+  const parts = s
+    .split(/\n{2,}/g)
+    .map((p) => p.trim())
+    .filter(Boolean);
   s = parts
     .map((part) => {
       // If part already starts with a block tag (h1/h2/h3/ul), keep it
       if (/^<(h1|h2|h3|ul)/i.test(part)) return part;
       // Replace remaining single newlines with <br>
-      const withBreaks = part.replace(/\n/g, '<br />');
+      const withBreaks = part.replace(/\n/g, "<br />");
       return `<p class="mb-4 text-base md:text-lg leading-relaxed">${withBreaks}</p>`;
     })
-    .join('');
+    .join("");
 
   return s;
 }
@@ -435,17 +464,38 @@ export default function AnimatedAIChat({
                         if (!result) return;
                         // Generate a professional PDF using jsPDF
                         try {
-                          const { jsPDF } = await import('jspdf');
-                          const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+                          const { jsPDF } = await import("jspdf");
+                          const doc = new jsPDF({ unit: "pt", format: "a4" });
                           const margin = 40;
                           let y = 60;
                           const pageWidth = doc.internal.pageSize.getWidth();
 
-                          function makeFilenameFromPrompt(q: string | undefined) {
+                          function makeFilenameFromPrompt(
+                            q: string | undefined,
+                          ) {
                             const raw = (q || "").trim();
                             if (!raw) return "questions";
                             // Remove common action verbs from the start
-                            const verbs = ["make","generate","produce","create","give","write","provide","please","build","compose","form","make/","make:","make-","make ","generate:","generate ","create:"];
+                            const verbs = [
+                              "make",
+                              "generate",
+                              "produce",
+                              "create",
+                              "give",
+                              "write",
+                              "provide",
+                              "please",
+                              "build",
+                              "compose",
+                              "form",
+                              "make/",
+                              "make:",
+                              "make-",
+                              "make ",
+                              "generate:",
+                              "generate ",
+                              "create:",
+                            ];
                             let s = raw;
                             // remove any leading verbs/please words
                             let changed = true;
@@ -473,22 +523,36 @@ export default function AnimatedAIChat({
                           const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
 
                           // First page heading: Test Paper Generator
-                          doc.setFont('helvetica', 'bold');
+                          doc.setFont("helvetica", "bold");
                           doc.setFontSize(22);
-                          doc.text('Test Paper Generator', pageWidth / 2, y, { align: 'center' });
+                          doc.text("Test Paper Generator", pageWidth / 2, y, {
+                            align: "center",
+                          });
                           y += 30;
 
                           // Build a concise summary line instead of echoing the prompt
-                          const promptText = (query || '').trim();
+                          const promptText = (query || "").trim();
                           // Try to extract counts from prompt or result
                           let mcqCount: number | null = null;
                           let fillCount: number | null = null;
-                          const mcqMatch = promptText.match(/(\d+)\s*(?:multiple[- ]choice|mcq)s?/i) || (result || '').match(/(\d+)\s*(?:multiple[- ]choice|mcq)s?/i);
-                          const fillMatch = promptText.match(/(\d+)\s*(?:fill[- ]in|fill-in|fill in|blank)s?/i) || (result || '').match(/(\d+)\s*(?:fill[- ]in|fill-in|fill in|blank)s?/i);
+                          const mcqMatch =
+                            promptText.match(
+                              /(\d+)\s*(?:multiple[- ]choice|mcq)s?/i,
+                            ) ||
+                            (result || "").match(
+                              /(\d+)\s*(?:multiple[- ]choice|mcq)s?/i,
+                            );
+                          const fillMatch =
+                            promptText.match(
+                              /(\d+)\s*(?:fill[- ]in|fill-in|fill in|blank)s?/i,
+                            ) ||
+                            (result || "").match(
+                              /(\d+)\s*(?:fill[- ]in|fill-in|fill in|blank)s?/i,
+                            );
                           if (mcqMatch) mcqCount = Number(mcqMatch[1]);
                           if (fillMatch) fillCount = Number(fillMatch[1]);
 
-                          let summaryLine = '';
+                          let summaryLine = "";
                           if (mcqCount !== null && fillCount !== null) {
                             summaryLine = `Here are ${mcqCount} multiple-choice questions (MCQs) and ${fillCount} fill-in-the-blank questions based on the provided PDF content:`;
                           } else if (mcqCount !== null) {
@@ -500,8 +564,11 @@ export default function AnimatedAIChat({
                           }
 
                           doc.setFontSize(12);
-                          doc.setFont('helvetica', 'normal');
-                          const summaryLines = doc.splitTextToSize(summaryLine, pageWidth - margin * 2);
+                          doc.setFont("helvetica", "normal");
+                          const summaryLines = doc.splitTextToSize(
+                            summaryLine,
+                            pageWidth - margin * 2,
+                          );
                           doc.text(summaryLines, margin, y);
                           y += summaryLines.length * 14 + 8;
 
@@ -511,7 +578,7 @@ export default function AnimatedAIChat({
                           y += 12;
 
                           // Content: parse markdown-like headings and paragraphs (skip echoing the prompt if present)
-                          const rawLines = (result || '').split(/\n/);
+                          const rawLines = (result || "").split(/\n/);
                           // If the first few lines of result echo the prompt, remove them
                           let startIndex = 0;
                           if (rawLines.length > 0 && promptText) {
@@ -520,9 +587,20 @@ export default function AnimatedAIChat({
                               startIndex = 1;
                             }
                             // Also remove an immediately following empty line if present
-                            if (rawLines[startIndex] && rawLines[startIndex].trim() === '') startIndex++;
+                            if (
+                              rawLines[startIndex] &&
+                              rawLines[startIndex].trim() === ""
+                            )
+                              startIndex++;
                           }
-                          let lines = rawLines.slice(startIndex).filter((l) => !/(<attachment\b|<\/attachment>|Here are the urls of the attachments|Only use these if|cdn\.builder\.io)/i.test(l));
+                          let lines = rawLines
+                            .slice(startIndex)
+                            .filter(
+                              (l) =>
+                                !/(<attachment\b|<\/attachment>|Here are the urls of the attachments|Only use these if|cdn\.builder\.io)/i.test(
+                                  l,
+                                ),
+                            );
 
                           // Remove leading summary/echo lines like "Here are 5 MCQs..." to avoid duplication
                           const normalize = (s: string) =>
@@ -533,7 +611,9 @@ export default function AnimatedAIChat({
                               .replace(/\s+/g, " ")
                               .trim();
 
-                          const summaryNormalized = normalize(summaryLine || '');
+                          const summaryNormalized = normalize(
+                            summaryLine || "",
+                          );
 
                           while (lines.length) {
                             const first = lines[0].trim();
@@ -541,11 +621,15 @@ export default function AnimatedAIChat({
                             // Remove if it exactly matches the generated summary, or if it's a short variant starting with "here are" mentioning mcq/fill
                             if (
                               norm === summaryNormalized ||
-                              (/^here are\b/.test(norm) && /(mcq|multiple|fill|fill in|fillintheblank|fillintheblanks|fill-in)/.test(norm))
+                              (/^here are\b/.test(norm) &&
+                                /(mcq|multiple|fill|fill in|fillintheblank|fillintheblanks|fill-in)/.test(
+                                  norm,
+                                ))
                             ) {
                               lines.shift();
                               // also drop immediate blank lines
-                              if (lines[0] && lines[0].trim() === '') lines.shift();
+                              if (lines[0] && lines[0].trim() === "")
+                                lines.shift();
                               continue;
                             }
                             break;
@@ -560,10 +644,16 @@ export default function AnimatedAIChat({
                             // heading
                             if (/^#{1}\s+/.test(line)) {
                               doc.setFontSize(16);
-                              doc.setFont('helvetica', 'bold');
-                              const text = line.replace(/^#{1}\s+/, '');
-                              const split = doc.splitTextToSize(text, pageWidth - margin * 2);
-                              if (y + split.length * 14 > doc.internal.pageSize.getHeight() - 60) {
+                              doc.setFont("helvetica", "bold");
+                              const text = line.replace(/^#{1}\s+/, "");
+                              const split = doc.splitTextToSize(
+                                text,
+                                pageWidth - margin * 2,
+                              );
+                              if (
+                                y + split.length * 14 >
+                                doc.internal.pageSize.getHeight() - 60
+                              ) {
                                 doc.addPage();
                                 y = 60;
                               }
@@ -571,10 +661,16 @@ export default function AnimatedAIChat({
                               y += split.length * 14 + 8;
                             } else if (/^#{2,}/.test(line)) {
                               doc.setFontSize(14);
-                              doc.setFont('helvetica', 'bold');
-                              const text = line.replace(/^#{1,}\s+/, '');
-                              const split = doc.splitTextToSize(text, pageWidth - margin * 2);
-                              if (y + split.length * 14 > doc.internal.pageSize.getHeight() - 60) {
+                              doc.setFont("helvetica", "bold");
+                              const text = line.replace(/^#{1,}\s+/, "");
+                              const split = doc.splitTextToSize(
+                                text,
+                                pageWidth - margin * 2,
+                              );
+                              if (
+                                y + split.length * 14 >
+                                doc.internal.pageSize.getHeight() - 60
+                              ) {
                                 doc.addPage();
                                 y = 60;
                               }
@@ -583,7 +679,7 @@ export default function AnimatedAIChat({
                             } else {
                               // normal paragraph, handle **bold**
                               doc.setFontSize(11);
-                              doc.setFont('helvetica', 'normal');
+                              doc.setFont("helvetica", "normal");
                               // Replace **bold** with uppercase as simple emphasis in PDF
                               const parts = line.split(/(\*\*.+?\*\*)/g);
                               let cursorX = margin;
@@ -594,20 +690,35 @@ export default function AnimatedAIChat({
                                   // fallback (shouldn't happen)
                                 }
                                 if (/^\*\*(.+)\*\*/.test(part)) {
-                                  const boldText = part.replace(/^\*\*(.+)\*\*/,'$1');
-                                  doc.setFont('helvetica', 'bold');
-                                  const split = doc.splitTextToSize(boldText, pageWidth - margin * 2);
+                                  const boldText = part.replace(
+                                    /^\*\*(.+)\*\*/,
+                                    "$1",
+                                  );
+                                  doc.setFont("helvetica", "bold");
+                                  const split = doc.splitTextToSize(
+                                    boldText,
+                                    pageWidth - margin * 2,
+                                  );
                                   // If wrap, just print as normal (simplify)
-                                  if (y + split.length * 12 > doc.internal.pageSize.getHeight() - 60) {
+                                  if (
+                                    y + split.length * 12 >
+                                    doc.internal.pageSize.getHeight() - 60
+                                  ) {
                                     doc.addPage();
                                     y = 60;
                                   }
                                   doc.text(split, margin, y);
                                   y += split.length * 12;
-                                  doc.setFont('helvetica', 'normal');
+                                  doc.setFont("helvetica", "normal");
                                 } else {
-                                  const split = doc.splitTextToSize(part, pageWidth - margin * 2);
-                                  if (y + split.length * 12 > doc.internal.pageSize.getHeight() - 60) {
+                                  const split = doc.splitTextToSize(
+                                    part,
+                                    pageWidth - margin * 2,
+                                  );
+                                  if (
+                                    y + split.length * 12 >
+                                    doc.internal.pageSize.getHeight() - 60
+                                  ) {
                                     doc.addPage();
                                     y = 60;
                                   }
@@ -629,17 +740,26 @@ export default function AnimatedAIChat({
                           const pageCount = doc.getNumberOfPages();
                           for (let i = 1; i <= pageCount; i++) {
                             doc.setPage(i);
-                            doc.setFont('helvetica', 'normal');
+                            doc.setFont("helvetica", "normal");
                             doc.setFontSize(10);
                             doc.setTextColor(150);
-                            const footerY = doc.internal.pageSize.getHeight() - 24;
-                            doc.text('Test Paper Generater', doc.internal.pageSize.getWidth() / 2, footerY, { align: 'center' });
+                            const footerY =
+                              doc.internal.pageSize.getHeight() - 24;
+                            doc.text(
+                              "Test Paper Generater",
+                              doc.internal.pageSize.getWidth() / 2,
+                              footerY,
+                              { align: "center" },
+                            );
                           }
 
                           doc.save(filename);
                         } catch (err) {
-                          console.error('PDF generation failed', err);
-                          toast({ title: 'Download failed', description: 'Could not generate PDF.' });
+                          console.error("PDF generation failed", err);
+                          toast({
+                            title: "Download failed",
+                            description: "Could not generate PDF.",
+                          });
                         }
                       }}
                       className={cn(
@@ -692,7 +812,9 @@ export default function AnimatedAIChat({
                     {!!result && !loading && (
                       <div
                         className="whitespace-pre-wrap break-words text-foreground text-base md:text-lg leading-7 font-sans"
-                        dangerouslySetInnerHTML={{ __html: formatResponse(result ?? "") }}
+                        dangerouslySetInnerHTML={{
+                          __html: formatResponse(result ?? ""),
+                        }}
                       />
                     )}
                   </div>
@@ -725,7 +847,7 @@ export default function AnimatedAIChat({
                   style={{ overflow: "hidden" }}
                   showRing={false}
                   typing={isTyping}
-                  />
+                />
               </div>
 
               <AnimatePresence>

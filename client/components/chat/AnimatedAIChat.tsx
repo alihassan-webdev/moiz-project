@@ -441,11 +441,35 @@ export default function AnimatedAIChat({
                           let y = 60;
                           const pageWidth = doc.internal.pageSize.getWidth();
 
-                          const safeQuery =
-                            (query || "")
-                              .trim()
-                              .slice(0, 50)
-                              .replace(/[^a-z0-9_-]/gi, "_") || "questions";
+                          function makeFilenameFromPrompt(q: string | undefined) {
+                            const raw = (q || "").trim();
+                            if (!raw) return "questions";
+                            // Remove common action verbs from the start
+                            const verbs = ["make","generate","produce","create","give","write","provide","please","build","compose","form","make/","make:","make-","make ","generate:","generate ","create:"];
+                            let s = raw;
+                            // remove any leading verbs/please words
+                            let changed = true;
+                            while (changed) {
+                              changed = false;
+                              for (const v of verbs) {
+                                const re = new RegExp("^" + v + "\\s+", "i");
+                                if (re.test(s)) {
+                                  s = s.replace(re, "").trim();
+                                  changed = true;
+                                }
+                              }
+                            }
+                            // If user included quotes around the request like: "make 5 mcqs", remove leading/trailing quotes
+                            s = s.replace(/^['\"]+|['\"]+$/g, "").trim();
+                            // Limit length and sanitize
+                            let out = s.slice(0, 60).toLowerCase();
+                            out = out.replace(/[^a-z0-9\s_-]/g, "");
+                            out = out.trim().replace(/\s+/g, "_");
+                            if (!out) return "questions";
+                            return out;
+                          }
+
+                          const safeQuery = makeFilenameFromPrompt(query);
                           const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
 
                           // First page heading: Test Paper Generator

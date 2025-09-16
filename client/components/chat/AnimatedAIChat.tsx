@@ -421,25 +421,121 @@ export default function AnimatedAIChat({
                       type="button"
                       aria-label="Download"
                       disabled={!result || !!loading}
-                      onClick={() => {
+                      onClick={async () => {
                         if (!result) return;
-                        const blob = new Blob([result], {
-                          type: "text/plain;charset=utf-8",
-                        });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        const safeQuery =
-                          (query || "")
-                            .trim()
-                            .slice(0, 50)
-                            .replace(/[^a-z0-9_-]/gi, "_") || "questions";
-                        const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.txt`;
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        a.remove();
-                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        // Generate a professional PDF using jsPDF
+                        try {
+                          const { jsPDF } = await import('jspdf');
+                          const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+                          const margin = 40;
+                          let y = 60;
+                          const pageWidth = doc.internal.pageSize.getWidth();
+
+                          const safeQuery =
+                            (query || "")
+                              .trim()
+                              .slice(0, 50)
+                              .replace(/[^a-z0-9_-]/gi, "_") || "questions";
+                          const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
+
+                          // Title
+                          doc.setFont('helvetica', 'bold');
+                          doc.setFontSize(20);
+                          doc.text(safeQuery.replace(/_/g, ' '), margin, y);
+                          y += 24;
+
+                          // Subtitle / metadata
+                          doc.setFontSize(10);
+                          doc.setFont('helvetica', 'normal');
+                          doc.text(`Generated: ${new Date().toLocaleString()}`, margin, y);
+                          y += 18;
+
+                          doc.setDrawColor(200);
+                          doc.setLineWidth(0.5);
+                          doc.line(margin, y, pageWidth - margin, y);
+                          y += 12;
+
+                          // Content: parse markdown-like headings and paragraphs
+                          const lines = (result || '').split(/\n/);
+                          for (let i = 0; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (!line) {
+                              y += 8;
+                              continue;
+                            }
+                            // heading
+                            if (/^#{1}\s+/.test(line)) {
+                              doc.setFontSize(16);
+                              doc.setFont('helvetica', 'bold');
+                              const text = line.replace(/^#{1}\s+/, '');
+                              const split = doc.splitTextToSize(text, pageWidth - margin * 2);
+                              if (y + split.length * 14 > doc.internal.pageSize.getHeight() - 60) {
+                                doc.addPage();
+                                y = 60;
+                              }
+                              doc.text(split, margin, y);
+                              y += split.length * 14 + 8;
+                            } else if (/^#{2,}/.test(line)) {
+                              doc.setFontSize(14);
+                              doc.setFont('helvetica', 'bold');
+                              const text = line.replace(/^#{1,}\s+/, '');
+                              const split = doc.splitTextToSize(text, pageWidth - margin * 2);
+                              if (y + split.length * 14 > doc.internal.pageSize.getHeight() - 60) {
+                                doc.addPage();
+                                y = 60;
+                              }
+                              doc.text(split, margin, y);
+                              y += split.length * 14 + 6;
+                            } else {
+                              // normal paragraph, handle **bold**
+                              doc.setFontSize(11);
+                              doc.setFont('helvetica', 'normal');
+                              // Replace **bold** with uppercase as simple emphasis in PDF
+                              const parts = line.split(/(\*\*.+?\*\*)/g);
+                              let cursorX = margin;
+                              let maxHeight = 0;
+                              for (const part of parts) {
+                                if (!part) continue;
+                                if (/^\*\*(.+)\*\$/.test(part)) {
+                                  // fallback (shouldn't happen)
+                                }
+                                if (/^\*\*(.+)\*\*/.test(part)) {
+                                  const boldText = part.replace(/^\*\*(.+)\*\*/,'$1');
+                                  doc.setFont('helvetica', 'bold');
+                                  const split = doc.splitTextToSize(boldText, pageWidth - margin * 2);
+                                  // If wrap, just print as normal (simplify)
+                                  if (y + split.length * 12 > doc.internal.pageSize.getHeight() - 60) {
+                                    doc.addPage();
+                                    y = 60;
+                                  }
+                                  doc.text(split, margin, y);
+                                  y += split.length * 12;
+                                  doc.setFont('helvetica', 'normal');
+                                } else {
+                                  const split = doc.splitTextToSize(part, pageWidth - margin * 2);
+                                  if (y + split.length * 12 > doc.internal.pageSize.getHeight() - 60) {
+                                    doc.addPage();
+                                    y = 60;
+                                  }
+                                  doc.text(split, margin, y);
+                                  y += split.length * 12;
+                                }
+                              }
+                              y += 6;
+                            }
+
+                            // page break if near bottom
+                            if (y > doc.internal.pageSize.getHeight() - 80) {
+                              doc.addPage();
+                              y = 60;
+                            }
+                          }
+
+                          doc.save(filename);
+                        } catch (err) {
+                          console.error('PDF generation failed', err);
+                          toast({ title: 'Download failed', description: 'Could not generate PDF.' });
+                        }
                       }}
                       className={cn(
                         "inline-flex items-center justify-center rounded-md p-2",

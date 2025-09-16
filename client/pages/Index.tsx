@@ -434,6 +434,48 @@ export default function Index() {
     if (!loading) await runSubmit();
   };
 
+  // Helper: escape HTML to avoid XSS
+  const escapeHtml = (unsafe: string) =>
+    unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  // Very small formatter: convert **bold** to <strong>, headings like 'Section' to <h3>, 'Qn.' to <p><strong>
+  const formatResultHtml = (txt: string) => {
+    if (!txt) return "";
+    // Escape first
+    let out = escapeHtml(txt);
+
+    // Convert bold **text**
+    out = out.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+
+    // Headings: lines starting with Section or Section A/B/C
+    out = out.replace(/^\s*(Section\s+[A-Z].*)$/gim, "<h3>$1</h3>");
+    out = out.replace(/^\s*(Section\s+[0-9]+[:\-].*)$/gim, "<h3>$1</h3>");
+
+    // Convert lines that look like 'Q1.' or 'Q16.' at line start
+    out = out.replace(/^\s*(Q\d+\.)\s*(.*)$/gim, "<p><strong>$1</strong> $2</p>");
+
+    // Convert MCQ option lines like 'a) text' to <div class="option"><strong>a)</strong> text</div>
+    out = out.replace(/^\s*([a-d])\)\s*(.*)$/gim, "<div class=\"option\"><strong>$1)</strong> $2</div>");
+
+    // Paragraphs: two or more newlines -> paragraph break
+    out = out.replace(/\n{2,}/g, "</p><p>");
+
+    // Single newlines -> line break
+    out = out.replace(/\n/g, "<br />");
+
+    // Wrap with a paragraph if not already
+    if (!out.startsWith("<h3>") && !out.startsWith("<p>")) {
+      out = `<p>${out}</p>`;
+    }
+
+    return out;
+  };
+
   return (
     <div>
       <section className="relative overflow-hidden rounded-2xl px-6 py-16 text-white">

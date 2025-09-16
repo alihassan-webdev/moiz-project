@@ -620,7 +620,7 @@ export default function Index() {
 
   return (
     <div>
-      <section className="relative overflow-hidden rounded-2xl px-6 pt-0 pb-12 sm:pt-0 sm:pb-14 text-white">
+      <section className="relative overflow-hidden rounded-2xl px-6 pt-0 pb-12 sm:pt-0 sm:pb-14 -mt-5 text-white">
         <div className="absolute inset-0 bg-background -z-10" />
         <div className="relative mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl text-secondary drop-shadow-md">

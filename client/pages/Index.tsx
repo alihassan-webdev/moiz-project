@@ -1,4 +1,3 @@
-import { useState, useCallback, useEffect, useRef } from "react";
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import AnimatedAIChat from "@/components/chat/AnimatedAIChat";
 import { toast } from "@/hooks/use-toast";

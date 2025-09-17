@@ -254,6 +254,9 @@ export default function AnimatedAIChat({
   const [inputFocused, setInputFocused] = useState(false);
   const commandPaletteRef = useRef<HTMLDivElement>(null);
   const [selectedPdfPath, setSelectedPdfPath] = useState<string>("");
+  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [totalMarks, setTotalMarks] = useState<number | null>(null);
 
   // If parent passes an external file, sync it into the internal attachment state
   useEffect(() => {
@@ -376,22 +379,60 @@ export default function AnimatedAIChat({
     return true;
   };
 
-  const pdfOptions = React.useMemo(() => {
-    const modules = import.meta.glob("/datafiles/*.pdf", {
+  const datafileEntries = React.useMemo(() => {
+    const modules = import.meta.glob("/datafiles/**/*.pdf", {
       as: "url",
       eager: true,
     }) as Record<string, string>;
-    const entries = Object.entries(modules).map(([path, url]) => ({
-      path,
-      url,
-      name: path.split("/").pop() || "file.pdf",
-    }));
-    return entries.sort((a, b) => a.name.localeCompare(b.name));
+    return Object.entries(modules)
+      .map(([path, url]) => {
+        const rel = path.replace(/^\/?datafiles\//, "");
+        const parts = rel.split("/");
+        const cls = parts[0] || "Other";
+        const subject = parts[1] || "General";
+        return {
+          path,
+          url,
+          name: path.split("/").pop() || "file.pdf",
+          cls,
+          subject,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, []);
+
+  const classOptions = React.useMemo(
+    () => Array.from(new Set(datafileEntries.map((e) => e.cls))).sort(),
+    [datafileEntries],
+  );
+  const subjectOptions = React.useMemo(
+    () =>
+      selectedClass
+        ? Array.from(
+            new Set(
+              datafileEntries
+                .filter((e) => e.cls === selectedClass)
+                .map((e) => e.subject),
+            ),
+          ).sort()
+        : [],
+    [datafileEntries, selectedClass],
+  );
+  const chapterOptions = React.useMemo(
+    () =>
+      selectedClass && selectedSubject
+        ? datafileEntries
+            .filter(
+              (e) => e.cls === selectedClass && e.subject === selectedSubject,
+            )
+            .sort((a, b) => a.name.localeCompare(b.name))
+        : [],
+    [datafileEntries, selectedClass, selectedSubject],
+  );
 
   const handleSelectPdf = async (path: string) => {
     try {
-      const found = pdfOptions.find((p) => p.path === path);
+      const found = datafileEntries.find((p) => p.path === path);
       if (!found) {
         toast({ title: "Not found", description: "Selected PDF is missing." });
         return;
@@ -524,8 +565,8 @@ export default function AnimatedAIChat({
                         try {
                           const { jsPDF } = await import("jspdf");
                           const doc = new jsPDF({ unit: "pt", format: "a4" });
-                          const margin = 40;
-                          let y = 60;
+                          const margin = 72;
+                          let y = margin;
                           const pageWidth = doc.internal.pageSize.getWidth();
 
                           function makeFilenameFromPrompt(
@@ -581,9 +622,9 @@ export default function AnimatedAIChat({
                           const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
 
                           // First page heading: Test Paper Generator
-                          doc.setFont("helvetica", "bold");
-                          doc.setFontSize(22);
-                          doc.text("Test Paper Generator", pageWidth / 2, y, {
+                          doc.setFont("times", "bold");
+                          doc.setFontSize(18);
+                          doc.text("Test Paper Generater", pageWidth / 2, y, {
                             align: "center",
                           });
                           y += 30;
@@ -622,18 +663,18 @@ export default function AnimatedAIChat({
                           }
 
                           doc.setFontSize(12);
-                          doc.setFont("helvetica", "normal");
+                          doc.setFont("times", "normal");
                           const summaryLines = doc.splitTextToSize(
                             summaryLine,
                             pageWidth - margin * 2,
                           );
                           doc.text(summaryLines, margin, y);
-                          y += summaryLines.length * 14 + 8;
+                          y += summaryLines.length * 18 + 10;
 
                           doc.setDrawColor(200);
                           doc.setLineWidth(0.5);
                           doc.line(margin, y, pageWidth - margin, y);
-                          y += 12;
+                          y += 16;
 
                           // Content: parse markdown-like headings and paragraphs (skip echoing the prompt if present)
                           const rawLines = (result || "").split(/\n/);
@@ -702,42 +743,42 @@ export default function AnimatedAIChat({
                             // heading
                             if (/^#{1}\s+/.test(line)) {
                               doc.setFontSize(16);
-                              doc.setFont("helvetica", "bold");
+                              doc.setFont("times", "bold");
                               const text = line.replace(/^#{1}\s+/, "");
                               const split = doc.splitTextToSize(
                                 text,
                                 pageWidth - margin * 2,
                               );
                               if (
-                                y + split.length * 14 >
-                                doc.internal.pageSize.getHeight() - 60
+                                y + split.length * 18 >
+                                doc.internal.pageSize.getHeight() - margin
                               ) {
                                 doc.addPage();
-                                y = 60;
+                                y = margin;
                               }
                               doc.text(split, margin, y);
                               y += split.length * 14 + 8;
                             } else if (/^#{2,}/.test(line)) {
                               doc.setFontSize(14);
-                              doc.setFont("helvetica", "bold");
+                              doc.setFont("times", "bold");
                               const text = line.replace(/^#{1,}\s+/, "");
                               const split = doc.splitTextToSize(
                                 text,
                                 pageWidth - margin * 2,
                               );
                               if (
-                                y + split.length * 14 >
-                                doc.internal.pageSize.getHeight() - 60
+                                y + split.length * 18 >
+                                doc.internal.pageSize.getHeight() - margin
                               ) {
                                 doc.addPage();
-                                y = 60;
+                                y = margin;
                               }
                               doc.text(split, margin, y);
                               y += split.length * 14 + 6;
                             } else {
                               // normal paragraph, handle **bold**
-                              doc.setFontSize(11);
-                              doc.setFont("helvetica", "normal");
+                              doc.setFontSize(12);
+                              doc.setFont("times", "normal");
                               // Replace **bold** with uppercase as simple emphasis in PDF
                               const parts = line.split(/(\*\*.+?\*\*)/g);
                               let cursorX = margin;
@@ -752,63 +793,79 @@ export default function AnimatedAIChat({
                                     /^\*\*(.+)\*\*/,
                                     "$1",
                                   );
-                                  doc.setFont("helvetica", "bold");
+                                  doc.setFont("times", "bold");
                                   const split = doc.splitTextToSize(
                                     boldText,
                                     pageWidth - margin * 2,
                                   );
                                   // If wrap, just print as normal (simplify)
                                   if (
-                                    y + split.length * 12 >
-                                    doc.internal.pageSize.getHeight() - 60
+                                    y + split.length * 18 >
+                                    doc.internal.pageSize.getHeight() - margin
                                   ) {
                                     doc.addPage();
-                                    y = 60;
+                                    y = margin;
                                   }
                                   doc.text(split, margin, y);
-                                  y += split.length * 12;
-                                  doc.setFont("helvetica", "normal");
+                                  y += split.length * 18;
+                                  doc.setFont("times", "normal");
                                 } else {
                                   const split = doc.splitTextToSize(
                                     part,
                                     pageWidth - margin * 2,
                                   );
                                   if (
-                                    y + split.length * 12 >
-                                    doc.internal.pageSize.getHeight() - 60
+                                    y + split.length * 18 >
+                                    doc.internal.pageSize.getHeight() - margin
                                   ) {
                                     doc.addPage();
-                                    y = 60;
+                                    y = margin;
                                   }
                                   doc.text(split, margin, y);
-                                  y += split.length * 12;
+                                  y += split.length * 18;
                                 }
                               }
-                              y += 6;
+                              y += 8;
                             }
 
                             // page break if near bottom
-                            if (y > doc.internal.pageSize.getHeight() - 80) {
+                            if (
+                              y >
+                              doc.internal.pageSize.getHeight() - margin
+                            ) {
                               doc.addPage();
-                              y = 60;
+                              y = margin;
                             }
                           }
 
-                          // Add watermark/footer on each page
+                          // Watermark and centered page numbers on each page
                           const pageCount = doc.getNumberOfPages();
                           for (let i = 1; i <= pageCount; i++) {
                             doc.setPage(i);
-                            doc.setFont("helvetica", "normal");
-                            doc.setFontSize(10);
-                            doc.setTextColor(150);
-                            const footerY =
-                              doc.internal.pageSize.getHeight() - 24;
+                            const pageW = doc.internal.pageSize.getWidth();
+                            const pageH = doc.internal.pageSize.getHeight();
+                            // Watermark
+                            doc.setFont("times", "bold");
+                            doc.setFontSize(64);
+                            doc.setTextColor(210);
                             doc.text(
                               "Test Paper Generater",
-                              doc.internal.pageSize.getWidth() / 2,
+                              pageW / 2,
+                              pageH / 2,
+                              { align: "center", angle: 45 },
+                            );
+                            // Footer page numbers
+                            doc.setFont("times", "normal");
+                            doc.setFontSize(10);
+                            doc.setTextColor(150);
+                            const footerY = pageH - 30;
+                            doc.text(
+                              `Page ${i} of ${pageCount}`,
+                              pageW / 2,
                               footerY,
                               { align: "center" },
                             );
+                            doc.setTextColor(0);
                           }
 
                           doc.save(filename);
@@ -935,22 +992,83 @@ export default function AnimatedAIChat({
               </AnimatePresence>
 
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <Select
-                    value={selectedPdfPath}
-                    onValueChange={handleSelectPdf}
+                    value={selectedClass}
+                    onValueChange={(v) => {
+                      setSelectedClass(v);
+                      setSelectedSubject("");
+                      setSelectedPdfPath("");
+                      setFile(null);
+                    }}
                   >
-                    <SelectTrigger className="w-[240px]">
-                      <SelectValue placeholder="Select PDF from datafiles" />
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Class" />
                     </SelectTrigger>
                     <SelectContent>
-                      {pdfOptions.map((opt) => (
-                        <SelectItem key={opt.path} value={opt.path}>
-                          {opt.name}
+                      {classOptions.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+
+                  <Select
+                    value={selectedSubject}
+                    onValueChange={(v) => {
+                      setSelectedSubject(v);
+                      setSelectedPdfPath("");
+                      setFile(null);
+                    }}
+                  >
+                    <SelectTrigger
+                      className="w-[180px]"
+                      disabled={!selectedClass}
+                    >
+                      <SelectValue placeholder="Subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjectOptions.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select
+                    value={selectedPdfPath}
+                    onValueChange={handleSelectPdf}
+                  >
+                    <SelectTrigger
+                      className="w-[220px]"
+                      disabled={!selectedSubject}
+                    >
+                      <SelectValue placeholder="Chapter (PDF)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {chapterOptions.map((opt) => (
+                        <SelectItem key={opt.path} value={opt.path}>
+                          {opt.name.replace(/\.pdf$/i, "")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <input
+                    type="number"
+                    min={20}
+                    max={100}
+                    value={totalMarks ?? ""}
+                    onChange={(e) => {
+                      const v = e.currentTarget.value;
+                      const n = v === "" ? null : Number(v);
+                      setTotalMarks(n);
+                    }}
+                    className="w-24 rounded-md border border-input bg-muted/40 px-2 py-2 text-sm"
+                    placeholder="Marks"
+                  />
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -967,10 +1085,47 @@ export default function AnimatedAIChat({
                   </motion.button>
                   <motion.button
                     type="button"
-                    onClick={handleSendMessage}
+                    onClick={async () => {
+                      if (!selectedClass)
+                        return toast({
+                          title: "Select class",
+                          description: "Choose a class",
+                        });
+                      if (!selectedSubject)
+                        return toast({
+                          title: "Select subject",
+                          description: "Choose a subject",
+                        });
+                      if (!selectedPdfPath)
+                        return toast({
+                          title: "Select chapter",
+                          description: "Choose a chapter PDF",
+                        });
+                      if (!file)
+                        return toast({
+                          title: "Missing PDF",
+                          description: "Attach a PDF to continue.",
+                        });
+                      const marks = Math.min(
+                        100,
+                        Math.max(20, Number(totalMarks ?? 0)),
+                      );
+                      if (!totalMarks || marks < 20)
+                        return toast({
+                          title: "Enter marks",
+                          description: "Enter 20–100",
+                        });
+                      const prompt = `Generate a complete exam-style question paper for Class ${selectedClass} in the subject "${selectedSubject}" of total ${marks} marks.\n\nStructure requirements:\n1) Section A - MCQs: allocate between 10% and 20% of total marks to MCQs. Each MCQ should be 1 mark and include four options labeled a), b), c), d). Number all MCQs sequentially (Q1, Q2, ...).\n2) Section B - Short Questions: allocate between 30% and 40% of total marks. Each short question should be 4 or 5 marks. Number questions sequentially continuing from MCQs.\n3) Section C - Long Questions: allocate between 30% and 40% of total marks. Each long question should be 8 to 10 marks. Number questions sequentially continuing from Section B.\n\nContent and formatting instructions:\n- Provide actual question text for every item (do NOT output only a scheme).\n- For MCQs include clear options (a/b/c/d) and ensure only one correct option logically exists (do NOT reveal answers).\n- Short and long questions should be clear, exam-style (descriptive, conceptual or numerical as appropriate), and require the indicated length of answer.\n- Use headings exactly: "Section A - MCQs", "Section B - Short Questions", "Section C - Long Questions".\n- Use numbering like Q1, Q2, Q3 ... across the paper.\n- Ensure the marks per question and number of questions sum exactly to the total ${marks} marks.`;
+                      try {
+                        setIsTyping(true);
+                        await onSubmit({ file, query: prompt });
+                      } finally {
+                        setIsTyping(false);
+                      }
+                    }}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
-                    disabled={loading || isTyping || !value.trim()}
+                    disabled={loading || isTyping}
                     className={cn(
                       "rounded-lg px-4 py-2 text-sm font-medium transition-all",
                       "flex items-center gap-2",
@@ -985,7 +1140,7 @@ export default function AnimatedAIChat({
                       <SendIcon className="h-4 w-4" />
                     )}
                     <span>
-                      {loading || isTyping ? "Generating..." : "Send"}
+                      {loading || isTyping ? "Generating..." : "Generate"}
                     </span>
                   </motion.button>
                 </div>

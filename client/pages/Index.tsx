@@ -86,6 +86,8 @@ function ExternalPdfSelector({
   const [subjectOptions, setSubjectOptions] = useState<
     { path: string; url: string; name: string }[]
   >([]);
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [selectedSubjectName, setSelectedSubjectName] = useState<string>("");
   const [selectedSubjectPath, setSelectedSubjectPath] = useState<string>("");
   const [totalMarks, setTotalMarks] = useState<number | null>(null);
   const [promptText, setPromptText] = useState("");
@@ -99,12 +101,28 @@ function ExternalPdfSelector({
     return `Generate a complete exam-style question paper for Class ${cls} in the subject "${subjectName}" of total ${marks} marks.\n\nStructure requirements:\n1) Section A - MCQs: allocate between 10% and 20% of total marks to MCQs. Each MCQ should be 1 mark and include four options labeled a), b), c), d). Number all MCQs sequentially (Q1, Q2, ...).\n2) Section B - Short Questions: allocate between 30% and 40% of total marks. Each short question should be 4 or 5 marks. Number questions sequentially continuing from MCQs.\n3) Section C - Long Questions: allocate between 30% and 40% of total marks. Each long question should be 8 to 10 marks. Number questions sequentially continuing from Section B.\n\nContent and formatting instructions:\n- Provide actual question text for every item (do NOT output only a scheme).\n- For MCQs include clear options (a/b/c/d) and ensure only one correct option logically exists (do NOT reveal answers).\n- Short and long questions should be clear, exam-style (descriptive, conceptual or numerical as appropriate), and require the indicated length of answer.\n- Use headings exactly: "Section A - MCQs", "Section B - Short Questions", "Section C - Long Questions".\n- Use numbering like Q1, Q2, Q3 ... across the paper.\n- Ensure the marks per question and number of questions sum exactly to the total ${marks} marks. If multiple valid distributions exist, choose a balanced distribution that fits the percentage ranges and explain the distribution briefly at the top in one line.\n- Do NOT provide answers or solutions.\n- Keep layout professional and easy to read (use line breaks, headings, and spacing similar to an exam paper).\n\nOutput only the exam paper text (no metadata, no commentary).`;
   };
 
+  const subjectOf = (p: string) => {
+    const m = p.replace(/^\/?datafiles\//, "");
+    const parts = m.split("/");
+    return parts[1] || "General";
+  };
+
   useEffect(() => {
-    setSubjectOptions(selectedClass ? byClass[selectedClass] || [] : []);
+    const arr = selectedClass ? byClass[selectedClass] || [] : [];
+    setSubjectOptions(arr);
+    const subs = Array.from(new Set(arr.map((e) => subjectOf(e.path)))).sort();
+    setSubjects(subs);
+    setSelectedSubjectName("");
     setSelectedSubjectPath("");
   }, [selectedClass]);
 
-  const handleSelectSubject = async (path: string) => {
+  const handleSelectSubject = (name: string) => {
+    setSelectedSubjectName(name);
+    setSelectedSubjectPath("");
+    onLoadFile(null);
+  };
+
+  const handleSelectChapter = async (path: string) => {
     if (!path) return;
     const found = entries.find((e) => e.path === path);
     if (!found) return;
@@ -114,7 +132,8 @@ function ExternalPdfSelector({
       const f = new File([blob], found.name, { type: "application/pdf" });
       onLoadFile(f);
       setSelectedSubjectPath(path);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === "AbortError") return; // ignore user/navigation aborts silently
       toast({ title: "Load failed", description: "Could not load PDF." });
     }
   };
@@ -146,25 +165,59 @@ function ExternalPdfSelector({
         >
           <label className="text-xs text-muted-foreground">Subject</label>
           <Select
-            value={selectedSubjectPath}
-            onValueChange={(p) => {
-              setSelectedSubjectPath(p);
-              handleSelectSubject(p);
-            }}
+            value={selectedSubjectName}
+            onValueChange={(name) => handleSelectSubject(name)}
           >
             <SelectTrigger className="w-full" disabled={!selectedClass}>
               <SelectValue
                 placeholder={
-                  selectedClass ? "Select subject (PDF)" : "Select class first"
+                  selectedClass ? "Select subject" : "Select class first"
                 }
               />
             </SelectTrigger>
             <SelectContent>
-              {subjectOptions.map((s) => (
-                <SelectItem key={s.path} value={s.path}>
-                  {s.name}
+              {subjects.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div
+          className={`transition-opacity ${!selectedSubjectName ? "opacity-50 pointer-events-none" : ""}`}
+        >
+          <label className="text-xs text-muted-foreground">Chapter</label>
+          <Select
+            value={selectedSubjectPath}
+            onValueChange={(p) => {
+              setSelectedSubjectPath(p);
+              handleSelectChapter(p);
+            }}
+          >
+            <SelectTrigger className="w-full" disabled={!selectedSubjectName}>
+              <SelectValue
+                placeholder={
+                  selectedSubjectName
+                    ? "Select chapter (PDF)"
+                    : "Select subject first"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {(subjectOptions || [])
+                .filter(
+                  (s) =>
+                    selectedSubjectName &&
+                    subjectOf(s.path) === selectedSubjectName,
+                )
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((s) => (
+                  <SelectItem key={s.path} value={s.path}>
+                    {s.name.replace(/\.pdf$/i, "")}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -173,7 +226,21 @@ function ExternalPdfSelector({
           className={`transition-opacity ${!selectedSubjectPath ? "opacity-50 pointer-events-none" : ""}`}
         >
           <label className="text-xs text-muted-foreground">Total Marks</label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center flex-wrap">
+            <input
+              type="number"
+              min={20}
+              max={100}
+              value={totalMarks ?? ""}
+              onChange={(e) => {
+                const v = e.currentTarget.value;
+                const n = v === "" ? null : Number(v);
+                setTotalMarks(n);
+              }}
+              disabled={!selectedSubjectPath || !!loading}
+              className="w-24 rounded-md border border-input bg-muted/40 px-2 py-2 text-sm"
+              placeholder="Marks"
+            />
             <button
               type="button"
               onClick={() => setTotalMarks(30)}
@@ -203,7 +270,7 @@ function ExternalPdfSelector({
             </button>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Select 30, 50, or 100
+            Enter 20–100 or use quick buttons
           </p>
         </div>
       </div>
@@ -217,11 +284,7 @@ function ExternalPdfSelector({
                 title: "Select PDF",
                 description: "Please choose a PDF to use.",
               });
-            // Ensure subject is loaded (handleSelectSubject already loads and calls onLoadFile)
-            const found = entries.find((e) => e.path === selectedSubjectPath);
-            const subjectName = found
-              ? found.name.replace(/\.pdf$/i, "")
-              : selectedSubjectPath || "";
+            const subjectName = selectedSubjectName || "";
             if (totalMarks == null) {
               return toast({
                 title: "Enter total marks",
@@ -335,6 +398,20 @@ export default function Index() {
     if (el) el.value = "";
   };
 
+  // Utility: promise timeout without aborting the underlying fetch
+  const withTimeout = async <T,>(p: Promise<T>, ms: number): Promise<T> => {
+    return await new Promise<T>((resolve, reject) => {
+      const id = setTimeout(() => reject(new Error("timeout")), ms);
+      p.then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      }).catch((e) => {
+        clearTimeout(id);
+        reject(e);
+      });
+    });
+  };
+
   const runSubmit = async (fArg?: File | null, qArg?: string) => {
     setError(null);
     setResult(null);
@@ -364,9 +441,6 @@ export default function Index() {
         } catch {}
       }
 
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), timeoutMs);
-
       try {
         console.debug("Attempting fetch ->", finalUrl, {
           isExternal,
@@ -374,22 +448,24 @@ export default function Index() {
         });
         // If no file attached, send a lightweight JSON body with the query only
         if (!theFile) {
-          const res = await fetch(finalUrl, {
-            method: "POST",
-            signal: controller.signal,
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ query: q }),
-            ...(isExternal
-              ? {
-                  mode: "cors" as const,
-                  credentials: "omit" as const,
-                  referrerPolicy: "no-referrer" as const,
-                }
-              : {}),
-          });
+          const res = await withTimeout(
+            fetch(finalUrl, {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ query: q }),
+              ...(isExternal
+                ? {
+                    mode: "cors" as const,
+                    credentials: "omit" as const,
+                    referrerPolicy: "no-referrer" as const,
+                  }
+                : {}),
+            }),
+            timeoutMs,
+          );
           return res;
         }
 
@@ -402,41 +478,43 @@ export default function Index() {
           form.append("file", theFile);
         }
 
-        const res = await fetch(finalUrl, {
-          method: "POST",
-          body: form,
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-          ...(isExternal
-            ? {
-                mode: "cors" as const,
-                credentials: "omit" as const,
-                referrerPolicy: "no-referrer" as const,
-              }
-            : {}),
-        });
+        const res = await withTimeout(
+          fetch(finalUrl, {
+            method: "POST",
+            body: form,
+            headers: { Accept: "application/json" },
+            ...(isExternal
+              ? {
+                  mode: "cors" as const,
+                  credentials: "omit" as const,
+                  referrerPolicy: "no-referrer" as const,
+                }
+              : {}),
+          }),
+          timeoutMs,
+        );
         return res;
       } catch (err: any) {
         try {
-          if (err?.name === "AbortError") {
-            console.warn("Fetch aborted:", finalUrl, err?.message ?? err);
+          if (err?.message === "timeout") {
+            console.warn("Request timed out:", finalUrl);
           } else if (
             err?.message === "Failed to fetch" ||
             err?.name === "TypeError"
           ) {
-            // Likely network or CORS
             console.warn(
               "Network or CORS error when fetching:",
               finalUrl,
               err?.message ?? err,
             );
+          } else if (err?.name === "AbortError") {
+            // Should not happen now, but silently handle
+            console.warn("Fetch aborted:", finalUrl);
           } else {
             console.warn("Fetch error:", finalUrl, err?.message ?? err);
           }
         } catch {}
         return null;
-      } finally {
-        clearTimeout(t);
       }
     };
 
@@ -517,7 +595,7 @@ export default function Index() {
       }
     } catch (err: any) {
       const msg =
-        err?.name === "AbortError"
+        err?.message === "timeout"
           ? "Request timed out. Please try again."
           : err?.message || "Request failed";
       setError(msg);
@@ -651,8 +729,8 @@ export default function Index() {
                       try {
                         const { jsPDF } = await import("jspdf");
                         const doc = new jsPDF({ unit: "pt", format: "a4" });
-                        const margin = 40;
-                        let y = 60;
+                        const margin = 72; // 1 inch margins
+                        let y = margin; // start below top margin
                         const pageWidth = doc.internal.pageSize.getWidth();
 
                         function makeFilenameFromPrompt(q: string | undefined) {
@@ -693,35 +771,52 @@ export default function Index() {
                         const safeQuery = makeFilenameFromPrompt(query);
                         const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
 
-                        doc.setFont("helvetica", "bold");
-                        doc.setFontSize(22);
-                        doc.text("Test Paper Generator", pageWidth / 2, y, {
+                        doc.setFont("times", "bold");
+                        doc.setFontSize(18);
+                        doc.text("Test Paper Generater", pageWidth / 2, y, {
                           align: "center",
                         });
                         y += 30;
 
+                        const dateStr = new Date().toLocaleString();
                         const promptText = (query || "").trim();
-                        doc.setFont("helvetica", "normal");
+                        doc.setFont("times", "normal");
                         doc.setFontSize(12);
                         const header = `Query: ${promptText}`;
                         doc.text(header, margin, y);
-                        y += 20;
+                        y += 18;
+                        doc.setDrawColor(200);
+                        doc.setLineWidth(0.5);
+                        doc.line(margin, y + 4, pageWidth - margin, y + 4);
+                        y += 12;
 
                         const rawText = (result || "")
                           .replace(/\r\n/g, "\n")
                           .replace(/\n{3,}/g, "\n\n");
 
-                        const lineHeight = 13;
-                        const paraGap = 8;
+                        const lineHeight = 18; // 1.5x-ish line spacing
+                        const paraGap = 12;
                         const pageHeight = doc.internal.pageSize.getHeight();
                         const usableWidth = pageWidth - margin * 2;
 
-                        doc.setFontSize(11);
+                        doc.setFont("times", "normal");
+                        doc.setFontSize(12);
 
                         function ensurePageSpace(linesNeeded = 1) {
-                          if (y + lineHeight * linesNeeded > pageHeight - margin) {
+                          if (
+                            y + lineHeight * linesNeeded >
+                            pageHeight - margin
+                          ) {
                             doc.addPage();
                             y = margin;
+                            // running header on every new page
+                            doc.setFont("times", "bold");
+                            doc.setFontSize(12);
+                            doc.text("Test Paper Generater", margin, y);
+                            doc.setDrawColor(220);
+                            doc.setLineWidth(0.5);
+                            doc.line(margin, y + 6, pageWidth - margin, y + 6);
+                            y += 16;
                           }
                         }
 
@@ -733,22 +828,69 @@ export default function Index() {
                             continue;
                           }
 
-                          const isSection = /^\s*Section\s+[A-Z0-9\-–].*/i.test(text);
+                          const isSection =
+                            /^\s*(section|part)\s+[A-Z0-9\-–]+/i.test(text);
+                          const isQuestionLine =
+                            /^(?:q\s*\d+|\d+[\.)]|\(\d+\))\s+/i.test(text);
+
                           if (isSection) {
-                            doc.setFont("helvetica", "bold");
+                            doc.setFont("times", "bold");
+                            doc.setFontSize(16);
+                          } else if (isQuestionLine) {
+                            doc.setFont("times", "bold");
                             doc.setFontSize(13);
                           } else {
-                            doc.setFont("helvetica", "normal");
-                            doc.setFontSize(11);
+                            doc.setFont("times", "normal");
+                            doc.setFontSize(12);
                           }
 
-                          const wrapped = doc.splitTextToSize(text, usableWidth);
-                          for (const s of wrapped) {
-                            ensurePageSpace();
-                            doc.text(s, margin, y);
-                            y += lineHeight;
+                          const lines = text.split(/\n/);
+                          for (let i = 0; i < lines.length; i++) {
+                            const l = lines[i];
+                            const isOption =
+                              /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
+                            const indent = isOption ? 18 : 0;
+                            const wrap = doc.splitTextToSize(
+                              l,
+                              usableWidth - indent,
+                            );
+                            for (const w of wrap) {
+                              ensurePageSpace(1);
+                              doc.text(w, margin + indent, y);
+                              y += lineHeight;
+                            }
+                            if (isOption) y -= 2; // slightly tighter between options
                           }
                           y += paraGap;
+                        }
+
+                        // Add watermark and footer on each page
+                        const totalPages = doc.getNumberOfPages();
+                        for (let i = 1; i <= totalPages; i++) {
+                          doc.setPage(i);
+                          // Watermark
+                          const cx = doc.internal.pageSize.getWidth() / 2;
+                          const cy = doc.internal.pageSize.getHeight() / 2;
+                          doc.setFont("times", "bold");
+                          doc.setFontSize(64);
+                          doc.setTextColor(210);
+                          doc.text("Test Paper Generater", cx, cy, {
+                            align: "center",
+                            angle: 45,
+                          });
+                          // Footer page number
+                          doc.setFont("times", "normal");
+                          doc.setFontSize(10);
+                          doc.setTextColor(120);
+                          const footerY =
+                            doc.internal.pageSize.getHeight() - 30;
+                          doc.text(
+                            `Page ${i} of ${totalPages}`,
+                            doc.internal.pageSize.getWidth() / 2,
+                            footerY,
+                            { align: "center" },
+                          );
+                          doc.setTextColor(0);
                         }
 
                         doc.save(filename);

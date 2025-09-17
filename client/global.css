@@ -219,16 +219,17 @@
 /* Paper view: prevent overlap/overflow and add subtle centered watermark */
 .paper-view {
   position: relative;
+  min-height: 60vh;
 }
 .paper-watermark::before {
   content: "Test Paper Generater";
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%) rotate(-30deg);
+  transform: translate(-50%, -50%);
   font-weight: 800;
-  font-size: clamp(64px, 12vw, 180px);
-  color: hsl(var(--secondary) / 0.08);
+  font-size: clamp(72px, 14vw, 220px);
+  color: hsl(var(--secondary) / 0.06);
   letter-spacing: 2px;
   white-space: nowrap;
   pointer-events: none;

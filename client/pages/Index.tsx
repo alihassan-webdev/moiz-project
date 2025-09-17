@@ -868,16 +868,6 @@ export default function Index() {
                         const totalPages = doc.getNumberOfPages();
                         for (let i = 1; i <= totalPages; i++) {
                           doc.setPage(i);
-                          // Watermark
-                          const cx = doc.internal.pageSize.getWidth() / 2;
-                          const cy = doc.internal.pageSize.getHeight() / 2;
-                          doc.setFont("times", "bold");
-                          doc.setFontSize(64);
-                          doc.setTextColor(230);
-                          doc.text("Test Paper Generater", cx, cy, {
-                            align: "center",
-                            angle: 0,
-                          });
                           // Footer page number
                           doc.setFont("times", "normal");
                           doc.setFontSize(10);
@@ -910,7 +900,7 @@ export default function Index() {
               </div>
 
               <div className="mt-3 rounded-xl bg-card/60 p-8 text-base overflow-hidden">
-                <div className="paper-view paper-watermark">
+                <div className="paper-view">
                   <div
                     className="paper-body prose prose-invert prose-lg leading-relaxed max-w-none break-words"
                     dangerouslySetInnerHTML={{

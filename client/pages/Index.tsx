@@ -86,6 +86,8 @@ function ExternalPdfSelector({
   const [subjectOptions, setSubjectOptions] = useState<
     { path: string; url: string; name: string }[]
   >([]);
+  const [subjects, setSubjects] = useState<string[]>([]);
+  const [selectedSubjectName, setSelectedSubjectName] = useState<string>("");
   const [selectedSubjectPath, setSelectedSubjectPath] = useState<string>("");
   const [totalMarks, setTotalMarks] = useState<number | null>(null);
   const [promptText, setPromptText] = useState("");
@@ -99,12 +101,28 @@ function ExternalPdfSelector({
     return `Generate a complete exam-style question paper for Class ${cls} in the subject "${subjectName}" of total ${marks} marks.\n\nStructure requirements:\n1) Section A - MCQs: allocate between 10% and 20% of total marks to MCQs. Each MCQ should be 1 mark and include four options labeled a), b), c), d). Number all MCQs sequentially (Q1, Q2, ...).\n2) Section B - Short Questions: allocate between 30% and 40% of total marks. Each short question should be 4 or 5 marks. Number questions sequentially continuing from MCQs.\n3) Section C - Long Questions: allocate between 30% and 40% of total marks. Each long question should be 8 to 10 marks. Number questions sequentially continuing from Section B.\n\nContent and formatting instructions:\n- Provide actual question text for every item (do NOT output only a scheme).\n- For MCQs include clear options (a/b/c/d) and ensure only one correct option logically exists (do NOT reveal answers).\n- Short and long questions should be clear, exam-style (descriptive, conceptual or numerical as appropriate), and require the indicated length of answer.\n- Use headings exactly: "Section A - MCQs", "Section B - Short Questions", "Section C - Long Questions".\n- Use numbering like Q1, Q2, Q3 ... across the paper.\n- Ensure the marks per question and number of questions sum exactly to the total ${marks} marks. If multiple valid distributions exist, choose a balanced distribution that fits the percentage ranges and explain the distribution briefly at the top in one line.\n- Do NOT provide answers or solutions.\n- Keep layout professional and easy to read (use line breaks, headings, and spacing similar to an exam paper).\n\nOutput only the exam paper text (no metadata, no commentary).`;
   };
 
+  const subjectOf = (p: string) => {
+    const m = p.replace(/^\/?datafiles\//, "");
+    const parts = m.split("/");
+    return parts[1] || "General";
+  };
+
   useEffect(() => {
-    setSubjectOptions(selectedClass ? byClass[selectedClass] || [] : []);
+    const arr = selectedClass ? byClass[selectedClass] || [] : [];
+    setSubjectOptions(arr);
+    const subs = Array.from(new Set(arr.map((e) => subjectOf(e.path)))).sort();
+    setSubjects(subs);
+    setSelectedSubjectName("");
     setSelectedSubjectPath("");
   }, [selectedClass]);
 
-  const handleSelectSubject = async (path: string) => {
+  const handleSelectSubject = (name: string) => {
+    setSelectedSubjectName(name);
+    setSelectedSubjectPath("");
+    onLoadFile(null);
+  };
+
+  const handleSelectChapter = async (path: string) => {
     if (!path) return;
     const found = entries.find((e) => e.path === path);
     if (!found) return;
@@ -146,25 +164,53 @@ function ExternalPdfSelector({
         >
           <label className="text-xs text-muted-foreground">Subject</label>
           <Select
-            value={selectedSubjectPath}
-            onValueChange={(p) => {
-              setSelectedSubjectPath(p);
-              handleSelectSubject(p);
-            }}
+            value={selectedSubjectName}
+            onValueChange={(name) => handleSelectSubject(name)}
           >
             <SelectTrigger className="w-full" disabled={!selectedClass}>
               <SelectValue
                 placeholder={
-                  selectedClass ? "Select subject (PDF)" : "Select class first"
+                  selectedClass ? "Select subject" : "Select class first"
                 }
               />
             </SelectTrigger>
             <SelectContent>
-              {subjectOptions.map((s) => (
-                <SelectItem key={s.path} value={s.path}>
-                  {s.name}
+              {subjects.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div
+          className={`transition-opacity ${!selectedSubjectName ? "opacity-50 pointer-events-none" : ""}`}
+        >
+          <label className="text-xs text-muted-foreground">Chapter</label>
+          <Select
+            value={selectedSubjectPath}
+            onValueChange={(p) => {
+              setSelectedSubjectPath(p);
+              handleSelectChapter(p);
+            }}
+          >
+            <SelectTrigger className="w-full" disabled={!selectedSubjectName}>
+              <SelectValue
+                placeholder={
+                  selectedSubjectName ? "Select chapter (PDF)" : "Select subject first"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              {(subjectOptions || [])
+                .filter((s) => selectedSubjectName && subjectOf(s.path) === selectedSubjectName)
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((s) => (
+                  <SelectItem key={s.path} value={s.path}>
+                    {s.name.replace(/\.pdf$/i, "")}
+                  </SelectItem>
+                ))}
             </SelectContent>
           </Select>
         </div>
@@ -173,7 +219,21 @@ function ExternalPdfSelector({
           className={`transition-opacity ${!selectedSubjectPath ? "opacity-50 pointer-events-none" : ""}`}
         >
           <label className="text-xs text-muted-foreground">Total Marks</label>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center flex-wrap">
+            <input
+              type="number"
+              min={20}
+              max={100}
+              value={totalMarks ?? ""}
+              onChange={(e) => {
+                const v = e.currentTarget.value;
+                const n = v === "" ? null : Number(v);
+                setTotalMarks(n);
+              }}
+              disabled={!selectedSubjectPath || !!loading}
+              className="w-24 rounded-md border border-input bg-muted/40 px-2 py-2 text-sm"
+              placeholder="Marks"
+            />
             <button
               type="button"
               onClick={() => setTotalMarks(30)}
@@ -203,7 +263,7 @@ function ExternalPdfSelector({
             </button>
           </div>
           <p className="text-xs text-muted-foreground mt-1">
-            Select 30, 50, or 100
+            Enter 20–100 or use quick buttons
           </p>
         </div>
       </div>
@@ -217,11 +277,7 @@ function ExternalPdfSelector({
                 title: "Select PDF",
                 description: "Please choose a PDF to use.",
               });
-            // Ensure subject is loaded (handleSelectSubject already loads and calls onLoadFile)
-            const found = entries.find((e) => e.path === selectedSubjectPath);
-            const subjectName = found
-              ? found.name.replace(/\.pdf$/i, "")
-              : selectedSubjectPath || "";
+            const subjectName = selectedSubjectName || "";
             if (totalMarks == null) {
               return toast({
                 title: "Enter total marks",

@@ -786,10 +786,7 @@ export default function Index() {
                         doc.setFont("times", "bold");
                         doc.setFontSize(22);
                         doc.text("Test Paper Generater", pageW / 2, y, { align: "center" });
-                        y += 26; // extra spacing between lines
-                        doc.setFontSize(18);
-                        doc.text("Class 11th - Chemistry Exam Paper", pageW / 2, y, { align: "center" });
-                        y += 24;
+                        y += 28; // extra spacing retained
                         doc.setDrawColor(190);
                         doc.setLineWidth(1);
                         doc.line(margin, y, pageW - margin, y);
@@ -798,10 +795,10 @@ export default function Index() {
                         doc.setFont("times", "normal");
                         doc.setFontSize(12);
                         const dateStr = new Date().toLocaleDateString();
-                        const sub1 = `Total Marks:`;
-                        const sub2 = `Generated: ${dateStr}`;
-                        doc.text(sub1, margin, y);
-                        doc.text(sub2, pageW - margin, y, { align: "right" });
+                        const marksMatch = (query || "").match(/total\s+(\d{1,3})\s*marks/i);
+                        const totalMarks = marksMatch ? Number(marksMatch[1]) : undefined;
+                        const metaRight = `Generated: ${dateStr}${totalMarks ? ` • Total Marks: ${totalMarks}` : ""}`;
+                        doc.text(metaRight, pageW - margin, y, { align: "right" });
                         y += 18;
 
                         // Light bordered content box for professional look
@@ -815,6 +812,7 @@ export default function Index() {
                         const cleaned = rawText
                           .split("\n")
                           .filter((l) => !/^\s*\**\s*Distribution:/i.test(l))
+                          .filter((l) => !/^\s*\**\s*Class\s*\d+.*Exam\s*Paper/i.test(l))
                           .join("\n");
                         const paragraphs = cleaned.split(/\n\s*\n/);
 
@@ -842,7 +840,7 @@ export default function Index() {
                             // Running header
                             doc.setFont("times", "bold");
                             doc.setFontSize(12);
-                            doc.text("Class 11th - Chemistry Exam Paper", margin, y);
+                            doc.text("Test Paper Generater", margin, y);
                             doc.setDrawColor(220);
                             doc.setLineWidth(0.5);
                             doc.line(margin, y + 6, pageW - margin, y + 6);
@@ -858,7 +856,7 @@ export default function Index() {
                           if (!text) { y += paraGap; continue; }
 
                           const isSection = /^\s*(Section\s+[A-Z0-9\-–].*)$/i.test(text);
-                          const isQuestion = /^\s*(Q\d+\.)\s+/i.test(text);
+                          const isQuestion = /^\s*(Q\.?\s*\d+\.)\s+/i.test(text);
                           const isOptionLine = /^\s*([A-Da-d][\).]|\([A-Da-d]\))\s+/.test(text);
 
                           if (isSection) {
@@ -926,10 +924,12 @@ export default function Index() {
 
                           const lines = text.split(/\n/);
                           for (let i = 0; i < lines.length; i++) {
-                            const l = lines[i];
+                            let l = lines[i];
                             const isOption = /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
                             const indent = isOption ? 18 : 0;
-                            const baseBold = isQuestion || (/^\s*Q\d+\./i.test(l));
+                            // Normalize "Q1." -> "Q.1."
+                            l = l.replace(/^(\s*)Q\s*(\d+)\./i, "$1Q.$2.");
+                            const baseBold = isQuestion || (/^\s*Q\.?\s*\d+\./i.test(l));
                             doc.setFontSize(baseBold ? 13 : 12);
                             drawStyledLine(l, baseBold, margin + indent, contentW - indent);
                             if (isOption) y -= 3;

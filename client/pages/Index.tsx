@@ -243,7 +243,7 @@ function ExternalPdfSelector({
               }}
               disabled={!selectedSubjectPath || !!loading}
               className="w-28 rounded-md border border-input bg-muted/40 px-3 py-2 text-base"
-              placeholder="Marks"
+              placeholder="Enter marks"
             />
             <button
               type="button"
@@ -273,9 +273,6 @@ function ExternalPdfSelector({
               100
             </button>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Enter 20–100 or use quick buttons
-          </p>
         </div>
 
         <div>

@@ -303,12 +303,14 @@ function ExternalPdfSelector({
             onSetPrompt(generated);
             await onGenerate(generated);
           }}
-          className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          className="relative rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {loading ? (
             <>
-              <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" />
-              <span>Generating...</span>
+              <span className="opacity-0">Generating...</span>
+              <div className="loader">
+                <div className="jimu-primary-loading"></div>
+              </div>
             </>
           ) : (
             "Generate"
@@ -528,13 +530,15 @@ export default function Index() {
       setLoading(true);
       let res: Response | null = null;
 
-      // Try direct API endpoint (silent on failure; fallbacks below)
+      // Try direct API endpoint first
+      let initialRes: Response | null = null;
       if (API_URL) {
-        res = await sendTo(API_URL, settings.initialTimeoutMs);
+        initialRes = await sendTo(API_URL, settings.initialTimeoutMs);
+        res = initialRes;
       }
 
-      // If direct request failed (CORS or network), try internal proxies first then serverless
-      if (!res) {
+      // If direct request failed (network/CORS) or returned non-OK, try internal proxies
+      if (!res || !res.ok) {
         const proxies = [
           "/.netlify/functions/proxy", // Vite dev proxy path (works locally)
           "/api/generate-questions", // Netlify redirect path (production on Netlify)

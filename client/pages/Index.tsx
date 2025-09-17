@@ -813,7 +813,7 @@ export default function Index() {
 
                         function ensurePageSpace(linesNeeded = 1) {
                           if (y + lineHeight * linesNeeded > pageH - margin) {
-                            // Draw content box up to current y before page break
+                            // Close current page box
                             doc.setDrawColor(225);
                             doc.setLineWidth(0.8);
                             doc.roundedRect(boxLeft - 6, boxTop - 10, (boxRight - boxLeft) + 12, (y - boxTop) + 16, 6, 6);
@@ -830,6 +830,10 @@ export default function Index() {
                             doc.setLineWidth(0.5);
                             doc.line(margin, y + 6, pageW - margin, y + 6);
                             y += 16;
+
+                            // Reset box top for new page
+                            // @ts-ignore - captured variable
+                            boxTop = y;
                           }
                         }
 

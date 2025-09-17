@@ -909,13 +909,15 @@ export default function Index() {
                 </div>
               </div>
 
-              <div className="mt-3 rounded-xl bg-card/60 p-8 text-base">
-                <div
-                  className="prose prose-invert prose-lg leading-relaxed max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html: formatResultHtml(result || ""),
-                  }}
-                />
+              <div className="mt-3 rounded-xl bg-card/60 p-8 text-base overflow-hidden">
+                <div className="paper-view paper-watermark">
+                  <div
+                    className="paper-body prose prose-invert prose-lg leading-relaxed max-w-none break-words"
+                    dangerouslySetInnerHTML={{
+                      __html: formatResultHtml(result || ""),
+                    }}
+                  />
+                </div>
               </div>
             </div>
           )}

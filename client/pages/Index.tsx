@@ -783,10 +783,10 @@ export default function Index() {
                         doc.setFont("times", "bold");
                         doc.setFontSize(22);
                         doc.text("Test Paper Generater", pageW / 2, y, { align: "center" });
-                        y += 22;
+                        y += 26; // extra spacing between lines
                         doc.setFontSize(18);
                         doc.text("Class 11th - Chemistry Exam Paper", pageW / 2, y, { align: "center" });
-                        y += 20;
+                        y += 24;
                         doc.setDrawColor(190);
                         doc.setLineWidth(1);
                         doc.line(margin, y, pageW - margin, y);
@@ -809,7 +809,11 @@ export default function Index() {
 
                         // Text content
                         const rawText = (result || "").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
-                        const paragraphs = rawText.split(/\n\s*\n/);
+                        const cleaned = rawText
+                          .split("\n")
+                          .filter((l) => !/^\s*\**\s*Distribution:/i.test(l))
+                          .join("\n");
+                        const paragraphs = cleaned.split(/\n\s*\n/);
 
                         const lineHeight = 18;
                         const paraGap = 10;
@@ -929,14 +933,14 @@ export default function Index() {
                         doc.setLineWidth(0.8);
                         doc.roundedRect(boxLeft - 6, boxTop - 10, (boxRight - boxLeft) + 12, (y - boxTop) + 16, 6, 6);
 
-                        // Footer page numbers
+                        // Footer watermark instead of page numbers
                         const totalPages = doc.getNumberOfPages();
                         for (let i = 1; i <= totalPages; i++) {
                           doc.setPage(i);
-                          doc.setFont("times", "normal");
-                          doc.setFontSize(10);
-                          doc.setTextColor(120);
-                          doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 28, { align: "center" });
+                          doc.setFont("times", "bold");
+                          doc.setFontSize(12);
+                          doc.setTextColor(200);
+                          doc.text("Test Paper Generater", pageW / 2, pageH - 28, { align: "center" });
                           doc.setTextColor(0);
                         }
 

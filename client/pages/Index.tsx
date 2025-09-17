@@ -873,7 +873,7 @@ export default function Index() {
                           const cy = doc.internal.pageSize.getHeight() / 2;
                           doc.setFont("times", "bold");
                           doc.setFontSize(64);
-                          doc.setTextColor(210);
+                          doc.setTextColor(230);
                           doc.text("Test Paper Generater", cx, cy, {
                             align: "center",
                             angle: 45,

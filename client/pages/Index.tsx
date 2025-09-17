@@ -146,7 +146,9 @@ function ExternalPdfSelector({
     <div className="rounded-xl card-yellow-shadow border border-muted/20 bg-card/60 p-8 sm:p-10">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
         <div>
-          <label className="text-sm font-medium text-muted-foreground">Class</label>
+          <label className="text-sm font-medium text-muted-foreground">
+            Class
+          </label>
           <Select
             value={selectedClass}
             onValueChange={(v) => setSelectedClass(v)}
@@ -167,7 +169,9 @@ function ExternalPdfSelector({
         <div
           className={`transition-opacity ${!selectedClass ? "opacity-50 pointer-events-none" : ""}`}
         >
-          <label className="text-sm font-medium text-muted-foreground">Subject</label>
+          <label className="text-sm font-medium text-muted-foreground">
+            Subject
+          </label>
           <Select
             value={selectedSubjectName}
             onValueChange={(name) => handleSelectSubject(name)}
@@ -192,7 +196,9 @@ function ExternalPdfSelector({
         <div
           className={`transition-opacity ${!selectedSubjectName ? "opacity-50 pointer-events-none" : ""}`}
         >
-          <label className="text-sm font-medium text-muted-foreground">Chapter</label>
+          <label className="text-sm font-medium text-muted-foreground">
+            Chapter
+          </label>
           <Select
             value={selectedSubjectPath}
             onValueChange={(p) => {
@@ -229,7 +235,9 @@ function ExternalPdfSelector({
         <div
           className={`transition-opacity ${!selectedSubjectPath ? "opacity-50 pointer-events-none" : ""}`}
         >
-          <label className="text-sm font-medium text-muted-foreground">Total Marks</label>
+          <label className="text-sm font-medium text-muted-foreground">
+            Total Marks
+          </label>
           <div className="flex gap-2 items-center flex-wrap">
             <input
               type="number"

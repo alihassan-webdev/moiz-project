@@ -722,21 +722,29 @@ export default function Index() {
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Result</h3>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
                     aria-label="Download PDF"
+                    variant="default"
+                    size="default"
+                    className="shadow-md"
                     disabled={!result || !!loading}
                     onClick={async () => {
                       if (!result) return;
                       try {
                         const { jsPDF } = await import("jspdf");
                         const doc = new jsPDF({ unit: "pt", format: "a4" });
-                        const margin = 72; // 1 inch margins
-                        let y = margin; // start below top margin
-                        const pageWidth = doc.internal.pageSize.getWidth();
 
+                        // Layout metrics
+                        const margin = 64; // slightly tighter than 1in
+                        const pageW = doc.internal.pageSize.getWidth();
+                        const pageH = doc.internal.pageSize.getHeight();
+                        const contentW = pageW - margin * 2;
+                        let y = margin;
+
+                        // Filename helper
                         function makeFilenameFromPrompt(q: string | undefined) {
                           const raw = (q || "").trim();
-                          if (!raw) return "questions";
+                          if (!raw) return "exam-paper";
                           const verbs = [
                             "make",
                             "generate",
@@ -765,138 +773,133 @@ export default function Index() {
                           let out = s.slice(0, 60).toLowerCase();
                           out = out.replace(/[^a-z0-9\s_-]/g, "");
                           out = out.trim().replace(/\s+/g, "_");
-                          if (!out) return "questions";
-                          return out;
+                          return out || "exam-paper";
                         }
 
                         const safeQuery = makeFilenameFromPrompt(query);
                         const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
 
+                        // Cover/header
                         doc.setFont("times", "bold");
-                        doc.setFontSize(18);
-                        doc.text("Test Paper Generater", pageWidth / 2, y, {
-                          align: "center",
-                        });
-                        y += 30;
+                        doc.setFontSize(20);
+                        doc.text("Class 11th - Chemistry Exam Paper", pageW / 2, y, { align: "center" });
+                        y += 22;
+                        doc.setDrawColor(190);
+                        doc.setLineWidth(1);
+                        doc.line(margin, y, pageW - margin, y);
+                        y += 16;
 
-                        const dateStr = new Date().toLocaleString();
-                        const promptText = (query || "").trim();
                         doc.setFont("times", "normal");
                         doc.setFontSize(12);
-                        const header = `Query: ${promptText}`;
-                        doc.text(header, margin, y);
+                        const dateStr = new Date().toLocaleDateString();
+                        const sub1 = `Total Marks: dynamic`; // no exact marks in parsed text; keep professional header
+                        const sub2 = `Generated: ${dateStr}`;
+                        doc.text(sub1, margin, y);
+                        doc.text(sub2, pageW - margin, y, { align: "right" });
                         y += 18;
-                        doc.setDrawColor(200);
-                        doc.setLineWidth(0.5);
-                        doc.line(margin, y + 4, pageWidth - margin, y + 4);
-                        y += 12;
 
-                        const rawText = (result || "")
-                          .replace(/\r\n/g, "\n")
-                          .replace(/\n{3,}/g, "\n\n");
+                        // Light bordered content box for professional look
+                        const boxTop = y;
+                        const boxLeft = margin;
+                        const boxRight = pageW - margin;
+                        const boxBottomMargin = margin;
 
-                        const lineHeight = 18; // 1.5x-ish line spacing
-                        const paraGap = 12;
-                        const pageHeight = doc.internal.pageSize.getHeight();
-                        const usableWidth = pageWidth - margin * 2;
+                        // Text content
+                        const rawText = (result || "").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+                        const paragraphs = rawText.split(/\n\s*\n/);
 
-                        doc.setFont("times", "normal");
-                        doc.setFontSize(12);
+                        const lineHeight = 18;
+                        const paraGap = 10;
 
                         function ensurePageSpace(linesNeeded = 1) {
-                          if (
-                            y + lineHeight * linesNeeded >
-                            pageHeight - margin
-                          ) {
+                          if (y + lineHeight * linesNeeded > pageH - margin) {
+                            // Draw content box up to current y before page break
+                            doc.setDrawColor(225);
+                            doc.setLineWidth(0.8);
+                            doc.roundedRect(boxLeft - 6, boxTop - 10, (boxRight - boxLeft) + 12, (y - boxTop) + 16, 6, 6);
+
+                            // New page
                             doc.addPage();
                             y = margin;
-                            // running header on every new page
+
+                            // Running header
                             doc.setFont("times", "bold");
                             doc.setFontSize(12);
-                            doc.text("Test Paper Generater", margin, y);
+                            doc.text("Class 11th - Chemistry Exam Paper", margin, y);
                             doc.setDrawColor(220);
                             doc.setLineWidth(0.5);
-                            doc.line(margin, y + 6, pageWidth - margin, y + 6);
+                            doc.line(margin, y + 6, pageW - margin, y + 6);
                             y += 16;
                           }
                         }
 
-                        const paragraphs = rawText.split(/\n\s*\n/);
                         for (const para of paragraphs) {
                           const text = para.trim();
-                          if (!text) {
-                            y += paraGap;
-                            continue;
-                          }
+                          if (!text) { y += paraGap; continue; }
 
-                          const isSection =
-                            /^\s*(section|part)\s+[A-Z0-9\-–]+/i.test(text);
-                          const isQuestionLine =
-                            /^(?:q\s*\d+|\d+[\.)]|\(\d+\))\s+/i.test(text);
+                          const isSection = /^\s*(Section\s+[A-Z0-9\-–].*)$/i.test(text);
+                          const isQuestion = /^\s*(Q\d+\.)\s+/i.test(text);
+                          const isOptionLine = /^\s*([A-Da-d][\).]|\([A-Da-d]\))\s+/.test(text);
 
                           if (isSection) {
                             doc.setFont("times", "bold");
-                            doc.setFontSize(16);
-                          } else if (isQuestionLine) {
-                            doc.setFont("times", "bold");
-                            doc.setFontSize(13);
-                          } else {
-                            doc.setFont("times", "normal");
-                            doc.setFontSize(12);
+                            doc.setFontSize(15);
+                            ensurePageSpace(2);
+                            doc.text(text.replace(/\*\*/g, ""), margin, y);
+                            y += 8;
+                            doc.setDrawColor(210);
+                            doc.setLineWidth(0.6);
+                            doc.line(margin, y, pageW - margin, y);
+                            y += 10;
+                            continue;
                           }
 
                           const lines = text.split(/\n/);
                           for (let i = 0; i < lines.length; i++) {
                             const l = lines[i];
-                            const isOption =
-                              /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
+                            const isOption = /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
                             const indent = isOption ? 18 : 0;
-                            const wrap = doc.splitTextToSize(
-                              l,
-                              usableWidth - indent,
-                            );
+                            const fontBold = isQuestion || (/^\s*Q\d+\./i.test(l));
+                            doc.setFont("times", fontBold ? "bold" : "normal");
+                            doc.setFontSize(fontBold ? 13 : 12);
+                            const wrap = doc.splitTextToSize(l, contentW - indent);
                             for (const w of wrap) {
                               ensurePageSpace(1);
                               doc.text(w, margin + indent, y);
                               y += lineHeight;
                             }
-                            if (isOption) y -= 2; // slightly tighter between options
+                            if (isOption) y -= 3;
                           }
+
                           y += paraGap;
                         }
 
-                        // Add watermark and footer on each page
+                        // Close last content box
+                        doc.setDrawColor(225);
+                        doc.setLineWidth(0.8);
+                        doc.roundedRect(boxLeft - 6, boxTop - 10, (boxRight - boxLeft) + 12, (y - boxTop) + 16, 6, 6);
+
+                        // Footer page numbers
                         const totalPages = doc.getNumberOfPages();
                         for (let i = 1; i <= totalPages; i++) {
                           doc.setPage(i);
-                          // Footer page number
                           doc.setFont("times", "normal");
                           doc.setFontSize(10);
                           doc.setTextColor(120);
-                          const footerY =
-                            doc.internal.pageSize.getHeight() - 30;
-                          doc.text(
-                            `Page ${i} of ${totalPages}`,
-                            doc.internal.pageSize.getWidth() / 2,
-                            footerY,
-                            { align: "center" },
-                          );
+                          doc.text(`Page ${i} of ${totalPages}`, pageW / 2, pageH - 28, { align: "center" });
                           doc.setTextColor(0);
                         }
 
                         doc.save(filename);
                       } catch (err) {
                         console.error(err);
-                        toast({
-                          title: "Download failed",
-                          description: "Could not generate PDF.",
-                        });
+                        toast({ title: "Download failed", description: "Could not generate PDF." });
                       }
                     }}
-                    className="rounded-full bg-secondary p-2 text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <Download className="h-4 w-4" />
-                  </button>
+                    Download PDF
+                  </Button>
                 </div>
               </div>
 

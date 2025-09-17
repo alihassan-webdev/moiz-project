@@ -651,8 +651,8 @@ export default function Index() {
                       try {
                         const { jsPDF } = await import("jspdf");
                         const doc = new jsPDF({ unit: "pt", format: "a4" });
-                        const margin = 40;
-                        let y = 60;
+                        const margin = 56; // wider margins for readability
+                        let y = margin; // start below top margin
                         const pageWidth = doc.internal.pageSize.getWidth();
 
                         function makeFilenameFromPrompt(q: string | undefined) {
@@ -700,19 +700,24 @@ export default function Index() {
                         });
                         y += 30;
 
+                        const dateStr = new Date().toLocaleString();
                         const promptText = (query || "").trim();
                         doc.setFont("helvetica", "normal");
                         doc.setFontSize(12);
                         const header = `Query: ${promptText}`;
                         doc.text(header, margin, y);
-                        y += 20;
+                        y += 18;
+                        doc.setDrawColor(200);
+                        doc.setLineWidth(0.5);
+                        doc.line(margin, y + 4, pageWidth - margin, y + 4);
+                        y += 12;
 
                         const rawText = (result || "")
                           .replace(/\r\n/g, "\n")
                           .replace(/\n{3,}/g, "\n\n");
 
-                        const lineHeight = 13;
-                        const paraGap = 8;
+                        const lineHeight = 16; // more generous leading
+                        const paraGap = 10;
                         const pageHeight = doc.internal.pageSize.getHeight();
                         const usableWidth = pageWidth - margin * 2;
 
@@ -722,6 +727,14 @@ export default function Index() {
                           if (y + lineHeight * linesNeeded > pageHeight - margin) {
                             doc.addPage();
                             y = margin;
+                            // running header on every new page
+                            doc.setFont("helvetica", "bold");
+                            doc.setFontSize(12);
+                            doc.text("Test Paper Generator", margin, y);
+                            doc.setDrawColor(220);
+                            doc.setLineWidth(0.5);
+                            doc.line(margin, y + 6, pageWidth - margin, y + 6);
+                            y += 16;
                           }
                         }
 
@@ -733,22 +746,47 @@ export default function Index() {
                             continue;
                           }
 
-                          const isSection = /^\s*Section\s+[A-Z0-9\-–].*/i.test(text);
+                          const isSection = /^\s*(section|part)\s+[A-Z0-9\-–]+/i.test(text);
+                          const isQuestionLine = /^(?:q\s*\d+|\d+[\.)]|\(\d+\))\s+/i.test(text);
+
                           if (isSection) {
                             doc.setFont("helvetica", "bold");
-                            doc.setFontSize(13);
+                            doc.setFontSize(14);
+                          } else if (isQuestionLine) {
+                            doc.setFont("helvetica", "bold");
+                            doc.setFontSize(12);
                           } else {
                             doc.setFont("helvetica", "normal");
                             doc.setFontSize(11);
                           }
 
-                          const wrapped = doc.splitTextToSize(text, usableWidth);
-                          for (const s of wrapped) {
-                            ensurePageSpace();
-                            doc.text(s, margin, y);
-                            y += lineHeight;
+                          const lines = text.split(/\n/);
+                          for (let i = 0; i < lines.length; i++) {
+                            const l = lines[i];
+                            const isOption = /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
+                            const indent = isOption ? 18 : 0;
+                            const wrap = doc.splitTextToSize(l, usableWidth - indent);
+                            for (const w of wrap) {
+                              ensurePageSpace(1);
+                              doc.text(w, margin + indent, y);
+                              y += lineHeight;
+                            }
+                            if (isOption) y -= 2; // slightly tighter between options
                           }
                           y += paraGap;
+                        }
+
+                        // Footer with page numbers and timestamp
+                        const totalPages = doc.getNumberOfPages();
+                        for (let i = 1; i <= totalPages; i++) {
+                          doc.setPage(i);
+                          doc.setFontSize(10);
+                          doc.setFont("helvetica", "normal");
+                          doc.setTextColor(120);
+                          const footerY = pageHeight - 20;
+                          doc.text(`Page ${i} of ${totalPages}`, pageWidth / 2, footerY, { align: "center" });
+                          doc.text(dateStr, pageWidth - margin, footerY, { align: "right" });
+                          doc.setTextColor(0);
                         }
 
                         doc.save(filename);

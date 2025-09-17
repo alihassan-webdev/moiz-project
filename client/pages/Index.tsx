@@ -876,7 +876,7 @@ export default function Index() {
                           doc.setTextColor(230);
                           doc.text("Test Paper Generater", cx, cy, {
                             align: "center",
-                            angle: 45,
+                            angle: 0,
                           });
                           // Footer page number
                           doc.setFont("times", "normal");

@@ -54,12 +54,14 @@ function ExternalPdfSelector({
   onGenerate,
   onReset,
   loading,
+  onSetInstitute,
 }: {
   onLoadFile: (f: File | null) => void;
   onSetPrompt: (p: string) => void;
   onGenerate: (prompt?: string) => Promise<void> | void;
   onReset: () => void;
   loading?: boolean;
+  onSetInstitute: (name: string) => void;
 }) {
   const pdfModules = import.meta.glob("/datafiles/**/*.pdf", {
     as: "url",
@@ -92,6 +94,7 @@ function ExternalPdfSelector({
   const [selectedSubjectPath, setSelectedSubjectPath] = useState<string>("");
   const [totalMarks, setTotalMarks] = useState<number | null>(null);
   const [promptText, setPromptText] = useState("");
+  const [instituteName, setInstituteName] = useState("");
 
   const buildPaperSchemePrompt = (
     subjectName: string,
@@ -274,6 +277,21 @@ function ExternalPdfSelector({
             Enter 20–100 or use quick buttons
           </p>
         </div>
+
+        <div>
+          <label className="text-xs text-muted-foreground">Institute Name</label>
+          <input
+            type="text"
+            value={instituteName}
+            onChange={(e) => {
+              const v = e.currentTarget.value;
+              setInstituteName(v);
+              onSetInstitute(v);
+            }}
+            className="w-full rounded-md border border-input bg-muted/40 px-2 py-2 text-sm"
+            placeholder="Enter institute name"
+          />
+        </div>
       </div>
 
       <div className="mt-3 flex gap-2">
@@ -325,6 +343,8 @@ function ExternalPdfSelector({
             setSelectedSubjectPath("");
             setTotalMarks(null);
             setPromptText("");
+            setInstituteName("");
+            onSetInstitute("");
             // clear parent state
             onLoadFile(null);
             onSetPrompt("");
@@ -346,6 +366,7 @@ export default function Index() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ApiResult | null>(null);
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
+  const [institute, setInstitute] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -718,6 +739,7 @@ export default function Index() {
               onGenerate={async (p?: string) => await runSubmit(undefined, p)}
               onReset={onReset}
               loading={loading}
+              onSetInstitute={(name) => setInstitute(name)}
             />
           </div>
 
@@ -789,10 +811,12 @@ export default function Index() {
                         // Cover/header
                         doc.setFont("times", "bold");
                         doc.setFontSize(22);
-                        doc.text("Test Paper Generater", pageW / 2, y, {
+                        const headingTitle = (institute && institute.trim()) ? institute.trim() : "Test Paper Generater";
+                        const headerLines = doc.splitTextToSize(headingTitle, pageW - margin * 2);
+                        doc.text(headerLines, pageW / 2, y, {
                           align: "center",
                         });
-                        y += 28; // extra spacing retained
+                        y += Math.max(28, headerLines.length * 18 + 10);
                         doc.setDrawColor(190);
                         doc.setLineWidth(1);
                         doc.line(margin, y, pageW - margin, y);
@@ -862,7 +886,7 @@ export default function Index() {
                             // Running header
                             doc.setFont("times", "bold");
                             doc.setFontSize(12);
-                            doc.text("Test Paper Generater", margin, y);
+                            doc.text(headingTitle, margin, y);
                             doc.setDrawColor(220);
                             doc.setLineWidth(0.5);
                             doc.line(margin, y + 6, pageW - margin, y + 6);
@@ -1006,7 +1030,7 @@ export default function Index() {
                           doc.setFontSize(12);
                           doc.setTextColor(200);
                           doc.text(
-                            "Test Paper Generater",
+                            headingTitle,
                             pageW / 2,
                             pageH - 28,
                             { align: "center" },

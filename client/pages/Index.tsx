@@ -781,9 +781,12 @@ export default function Index() {
 
                         // Cover/header
                         doc.setFont("times", "bold");
-                        doc.setFontSize(20);
-                        doc.text("Class 11th - Chemistry Exam Paper", pageW / 2, y, { align: "center" });
+                        doc.setFontSize(22);
+                        doc.text("Test Paper Generater", pageW / 2, y, { align: "center" });
                         y += 22;
+                        doc.setFontSize(18);
+                        doc.text("Class 11th - Chemistry Exam Paper", pageW / 2, y, { align: "center" });
+                        y += 20;
                         doc.setDrawColor(190);
                         doc.setLineWidth(1);
                         doc.line(margin, y, pageW - margin, y);

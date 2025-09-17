@@ -739,6 +739,9 @@ export default function Index() {
                         const pageW = doc.internal.pageSize.getWidth();
                         const pageH = doc.internal.pageSize.getHeight();
                         const contentW = pageW - margin * 2;
+                        const BORDER_PAD_X = 18; // horizontal padding from border to text
+                        const BORDER_PAD_Y_TOP = 14; // top padding
+                        const BORDER_PAD_Y_BOTTOM = 22; // bottom padding
                         let y = margin;
 
                         // Filename helper
@@ -821,9 +824,16 @@ export default function Index() {
                         function ensurePageSpace(linesNeeded = 1) {
                           if (y + lineHeight * linesNeeded > pageH - margin) {
                             // Close current page box
-                            doc.setDrawColor(225);
-                            doc.setLineWidth(0.8);
-                            doc.roundedRect(boxLeft - 6, boxTop - 10, (boxRight - boxLeft) + 12, (y - boxTop) + 16, 6, 6);
+                            doc.setDrawColor(140);
+                            doc.setLineWidth(1.2);
+                            doc.roundedRect(
+                              boxLeft - BORDER_PAD_X,
+                              boxTop - BORDER_PAD_Y_TOP,
+                              (boxRight - boxLeft) + BORDER_PAD_X * 2,
+                              (y - boxTop) + BORDER_PAD_Y_TOP + BORDER_PAD_Y_BOTTOM,
+                              6,
+                              6,
+                            );
 
                             // New page
                             doc.addPage();
@@ -929,9 +939,16 @@ export default function Index() {
                         }
 
                         // Close last content box
-                        doc.setDrawColor(225);
-                        doc.setLineWidth(0.8);
-                        doc.roundedRect(boxLeft - 6, boxTop - 10, (boxRight - boxLeft) + 12, (y - boxTop) + 16, 6, 6);
+                        doc.setDrawColor(140);
+                        doc.setLineWidth(1.2);
+                        doc.roundedRect(
+                          boxLeft - BORDER_PAD_X,
+                          boxTop - BORDER_PAD_Y_TOP,
+                          (boxRight - boxLeft) + BORDER_PAD_X * 2,
+                          (y - boxTop) + BORDER_PAD_Y_TOP + BORDER_PAD_Y_BOTTOM,
+                          6,
+                          6,
+                        );
 
                         // Footer watermark instead of page numbers
                         const totalPages = doc.getNumberOfPages();

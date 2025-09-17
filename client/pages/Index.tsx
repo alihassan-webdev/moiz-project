@@ -199,13 +199,19 @@ function ExternalPdfSelector({
             <SelectTrigger className="w-full" disabled={!selectedSubjectName}>
               <SelectValue
                 placeholder={
-                  selectedSubjectName ? "Select chapter (PDF)" : "Select subject first"
+                  selectedSubjectName
+                    ? "Select chapter (PDF)"
+                    : "Select subject first"
                 }
               />
             </SelectTrigger>
             <SelectContent>
               {(subjectOptions || [])
-                .filter((s) => selectedSubjectName && subjectOf(s.path) === selectedSubjectName)
+                .filter(
+                  (s) =>
+                    selectedSubjectName &&
+                    subjectOf(s.path) === selectedSubjectName,
+                )
                 .sort((a, b) => a.name.localeCompare(b.name))
                 .map((s) => (
                   <SelectItem key={s.path} value={s.path}>
@@ -797,7 +803,10 @@ export default function Index() {
                         doc.setFontSize(12);
 
                         function ensurePageSpace(linesNeeded = 1) {
-                          if (y + lineHeight * linesNeeded > pageHeight - margin) {
+                          if (
+                            y + lineHeight * linesNeeded >
+                            pageHeight - margin
+                          ) {
                             doc.addPage();
                             y = margin;
                             // running header on every new page
@@ -819,8 +828,10 @@ export default function Index() {
                             continue;
                           }
 
-                          const isSection = /^\s*(section|part)\s+[A-Z0-9\-–]+/i.test(text);
-                          const isQuestionLine = /^(?:q\s*\d+|\d+[\.)]|\(\d+\))\s+/i.test(text);
+                          const isSection =
+                            /^\s*(section|part)\s+[A-Z0-9\-–]+/i.test(text);
+                          const isQuestionLine =
+                            /^(?:q\s*\d+|\d+[\.)]|\(\d+\))\s+/i.test(text);
 
                           if (isSection) {
                             doc.setFont("times", "bold");
@@ -836,9 +847,13 @@ export default function Index() {
                           const lines = text.split(/\n/);
                           for (let i = 0; i < lines.length; i++) {
                             const l = lines[i];
-                            const isOption = /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
+                            const isOption =
+                              /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
                             const indent = isOption ? 18 : 0;
-                            const wrap = doc.splitTextToSize(l, usableWidth - indent);
+                            const wrap = doc.splitTextToSize(
+                              l,
+                              usableWidth - indent,
+                            );
                             for (const w of wrap) {
                               ensurePageSpace(1);
                               doc.text(w, margin + indent, y);
@@ -859,13 +874,22 @@ export default function Index() {
                           doc.setFont("times", "bold");
                           doc.setFontSize(64);
                           doc.setTextColor(210);
-                          doc.text("Test Paper Generater", cx, cy, { align: "center", angle: 45 });
+                          doc.text("Test Paper Generater", cx, cy, {
+                            align: "center",
+                            angle: 45,
+                          });
                           // Footer page number
                           doc.setFont("times", "normal");
                           doc.setFontSize(10);
                           doc.setTextColor(120);
-                          const footerY = doc.internal.pageSize.getHeight() - 30;
-                          doc.text(`Page ${i} of ${totalPages}`, doc.internal.pageSize.getWidth() / 2, footerY, { align: "center" });
+                          const footerY =
+                            doc.internal.pageSize.getHeight() - 30;
+                          doc.text(
+                            `Page ${i} of ${totalPages}`,
+                            doc.internal.pageSize.getWidth() / 2,
+                            footerY,
+                            { align: "center" },
+                          );
                           doc.setTextColor(0);
                         }
 

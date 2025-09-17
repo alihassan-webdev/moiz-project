@@ -422,7 +422,9 @@ export default function AnimatedAIChat({
     () =>
       selectedClass && selectedSubject
         ? datafileEntries
-            .filter((e) => e.cls === selectedClass && e.subject === selectedSubject)
+            .filter(
+              (e) => e.cls === selectedClass && e.subject === selectedSubject,
+            )
             .sort((a, b) => a.name.localeCompare(b.name))
         : [],
     [datafileEntries, selectedClass, selectedSubject],
@@ -827,7 +829,10 @@ export default function AnimatedAIChat({
                             }
 
                             // page break if near bottom
-                            if (y > doc.internal.pageSize.getHeight() - margin) {
+                            if (
+                              y >
+                              doc.internal.pageSize.getHeight() - margin
+                            ) {
                               doc.addPage();
                               y = margin;
                             }
@@ -843,13 +848,23 @@ export default function AnimatedAIChat({
                             doc.setFont("times", "bold");
                             doc.setFontSize(64);
                             doc.setTextColor(210);
-                            doc.text("Test Paper Generater", pageW / 2, pageH / 2, { align: "center", angle: 45 });
+                            doc.text(
+                              "Test Paper Generater",
+                              pageW / 2,
+                              pageH / 2,
+                              { align: "center", angle: 45 },
+                            );
                             // Footer page numbers
                             doc.setFont("times", "normal");
                             doc.setFontSize(10);
                             doc.setTextColor(150);
                             const footerY = pageH - 30;
-                            doc.text(`Page ${i} of ${pageCount}`, pageW / 2, footerY, { align: "center" });
+                            doc.text(
+                              `Page ${i} of ${pageCount}`,
+                              pageW / 2,
+                              footerY,
+                              { align: "center" },
+                            );
                             doc.setTextColor(0);
                           }
 
@@ -978,12 +993,15 @@ export default function AnimatedAIChat({
 
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <Select value={selectedClass} onValueChange={(v) => {
-                    setSelectedClass(v);
-                    setSelectedSubject("");
-                    setSelectedPdfPath("");
-                    setFile(null);
-                  }}>
+                  <Select
+                    value={selectedClass}
+                    onValueChange={(v) => {
+                      setSelectedClass(v);
+                      setSelectedSubject("");
+                      setSelectedPdfPath("");
+                      setFile(null);
+                    }}
+                  >
                     <SelectTrigger className="w-[160px]">
                       <SelectValue placeholder="Class" />
                     </SelectTrigger>
@@ -996,12 +1014,18 @@ export default function AnimatedAIChat({
                     </SelectContent>
                   </Select>
 
-                  <Select value={selectedSubject} onValueChange={(v) => {
-                    setSelectedSubject(v);
-                    setSelectedPdfPath("");
-                    setFile(null);
-                  }}>
-                    <SelectTrigger className="w-[180px]" disabled={!selectedClass}>
+                  <Select
+                    value={selectedSubject}
+                    onValueChange={(v) => {
+                      setSelectedSubject(v);
+                      setSelectedPdfPath("");
+                      setFile(null);
+                    }}
+                  >
+                    <SelectTrigger
+                      className="w-[180px]"
+                      disabled={!selectedClass}
+                    >
                       <SelectValue placeholder="Subject" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1013,8 +1037,14 @@ export default function AnimatedAIChat({
                     </SelectContent>
                   </Select>
 
-                  <Select value={selectedPdfPath} onValueChange={handleSelectPdf}>
-                    <SelectTrigger className="w-[220px]" disabled={!selectedSubject}>
+                  <Select
+                    value={selectedPdfPath}
+                    onValueChange={handleSelectPdf}
+                  >
+                    <SelectTrigger
+                      className="w-[220px]"
+                      disabled={!selectedSubject}
+                    >
                       <SelectValue placeholder="Chapter (PDF)" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1057,16 +1087,34 @@ export default function AnimatedAIChat({
                     type="button"
                     onClick={async () => {
                       if (!selectedClass)
-                        return toast({ title: "Select class", description: "Choose a class" });
+                        return toast({
+                          title: "Select class",
+                          description: "Choose a class",
+                        });
                       if (!selectedSubject)
-                        return toast({ title: "Select subject", description: "Choose a subject" });
+                        return toast({
+                          title: "Select subject",
+                          description: "Choose a subject",
+                        });
                       if (!selectedPdfPath)
-                        return toast({ title: "Select chapter", description: "Choose a chapter PDF" });
+                        return toast({
+                          title: "Select chapter",
+                          description: "Choose a chapter PDF",
+                        });
                       if (!file)
-                        return toast({ title: "Missing PDF", description: "Attach a PDF to continue." });
-                      const marks = Math.min(100, Math.max(20, Number(totalMarks ?? 0)));
+                        return toast({
+                          title: "Missing PDF",
+                          description: "Attach a PDF to continue.",
+                        });
+                      const marks = Math.min(
+                        100,
+                        Math.max(20, Number(totalMarks ?? 0)),
+                      );
                       if (!totalMarks || marks < 20)
-                        return toast({ title: "Enter marks", description: "Enter 20–100" });
+                        return toast({
+                          title: "Enter marks",
+                          description: "Enter 20–100",
+                        });
                       const prompt = `Generate a complete exam-style question paper for Class ${selectedClass} in the subject "${selectedSubject}" of total ${marks} marks.\n\nStructure requirements:\n1) Section A - MCQs: allocate between 10% and 20% of total marks to MCQs. Each MCQ should be 1 mark and include four options labeled a), b), c), d). Number all MCQs sequentially (Q1, Q2, ...).\n2) Section B - Short Questions: allocate between 30% and 40% of total marks. Each short question should be 4 or 5 marks. Number questions sequentially continuing from MCQs.\n3) Section C - Long Questions: allocate between 30% and 40% of total marks. Each long question should be 8 to 10 marks. Number questions sequentially continuing from Section B.\n\nContent and formatting instructions:\n- Provide actual question text for every item (do NOT output only a scheme).\n- For MCQs include clear options (a/b/c/d) and ensure only one correct option logically exists (do NOT reveal answers).\n- Short and long questions should be clear, exam-style (descriptive, conceptual or numerical as appropriate), and require the indicated length of answer.\n- Use headings exactly: "Section A - MCQs", "Section B - Short Questions", "Section C - Long Questions".\n- Use numbering like Q1, Q2, Q3 ... across the paper.\n- Ensure the marks per question and number of questions sum exactly to the total ${marks} marks.`;
                       try {
                         setIsTyping(true);

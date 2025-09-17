@@ -254,6 +254,9 @@ export default function AnimatedAIChat({
   const [inputFocused, setInputFocused] = useState(false);
   const commandPaletteRef = useRef<HTMLDivElement>(null);
   const [selectedPdfPath, setSelectedPdfPath] = useState<string>("");
+  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedSubject, setSelectedSubject] = useState<string>("");
+  const [totalMarks, setTotalMarks] = useState<number | null>(null);
 
   // If parent passes an external file, sync it into the internal attachment state
   useEffect(() => {
@@ -376,22 +379,58 @@ export default function AnimatedAIChat({
     return true;
   };
 
-  const pdfOptions = React.useMemo(() => {
-    const modules = import.meta.glob("/datafiles/*.pdf", {
+  const datafileEntries = React.useMemo(() => {
+    const modules = import.meta.glob("/datafiles/**/*.pdf", {
       as: "url",
       eager: true,
     }) as Record<string, string>;
-    const entries = Object.entries(modules).map(([path, url]) => ({
-      path,
-      url,
-      name: path.split("/").pop() || "file.pdf",
-    }));
-    return entries.sort((a, b) => a.name.localeCompare(b.name));
+    return Object.entries(modules)
+      .map(([path, url]) => {
+        const rel = path.replace(/^\/?datafiles\//, "");
+        const parts = rel.split("/");
+        const cls = parts[0] || "Other";
+        const subject = parts[1] || "General";
+        return {
+          path,
+          url,
+          name: path.split("/").pop() || "file.pdf",
+          cls,
+          subject,
+        };
+      })
+      .sort((a, b) => a.name.localeCompare(b.name));
   }, []);
+
+  const classOptions = React.useMemo(
+    () => Array.from(new Set(datafileEntries.map((e) => e.cls))).sort(),
+    [datafileEntries],
+  );
+  const subjectOptions = React.useMemo(
+    () =>
+      selectedClass
+        ? Array.from(
+            new Set(
+              datafileEntries
+                .filter((e) => e.cls === selectedClass)
+                .map((e) => e.subject),
+            ),
+          ).sort()
+        : [],
+    [datafileEntries, selectedClass],
+  );
+  const chapterOptions = React.useMemo(
+    () =>
+      selectedClass && selectedSubject
+        ? datafileEntries
+            .filter((e) => e.cls === selectedClass && e.subject === selectedSubject)
+            .sort((a, b) => a.name.localeCompare(b.name))
+        : [],
+    [datafileEntries, selectedClass, selectedSubject],
+  );
 
   const handleSelectPdf = async (path: string) => {
     try {
-      const found = pdfOptions.find((p) => p.path === path);
+      const found = datafileEntries.find((p) => p.path === path);
       if (!found) {
         toast({ title: "Not found", description: "Selected PDF is missing." });
         return;
@@ -933,22 +972,68 @@ export default function AnimatedAIChat({
               </AnimatePresence>
 
               <div className="border-border flex items-center justify-between gap-4 border-t p-4">
-                <div className="flex items-center gap-3">
-                  <Select
-                    value={selectedPdfPath}
-                    onValueChange={handleSelectPdf}
-                  >
-                    <SelectTrigger className="w-[240px]">
-                      <SelectValue placeholder="Select PDF from datafiles" />
+                <div className="flex items-center gap-3 flex-wrap">
+                  <Select value={selectedClass} onValueChange={(v) => {
+                    setSelectedClass(v);
+                    setSelectedSubject("");
+                    setSelectedPdfPath("");
+                    setFile(null);
+                  }}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue placeholder="Class" />
                     </SelectTrigger>
                     <SelectContent>
-                      {pdfOptions.map((opt) => (
-                        <SelectItem key={opt.path} value={opt.path}>
-                          {opt.name}
+                      {classOptions.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+
+                  <Select value={selectedSubject} onValueChange={(v) => {
+                    setSelectedSubject(v);
+                    setSelectedPdfPath("");
+                    setFile(null);
+                  }}>
+                    <SelectTrigger className="w-[180px]" disabled={!selectedClass}>
+                      <SelectValue placeholder="Subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {subjectOptions.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {s}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={selectedPdfPath} onValueChange={handleSelectPdf}>
+                    <SelectTrigger className="w-[220px]" disabled={!selectedSubject}>
+                      <SelectValue placeholder="Chapter (PDF)" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {chapterOptions.map((opt) => (
+                        <SelectItem key={opt.path} value={opt.path}>
+                          {opt.name.replace(/\.pdf$/i, "")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+
+                  <input
+                    type="number"
+                    min={20}
+                    max={100}
+                    value={totalMarks ?? ""}
+                    onChange={(e) => {
+                      const v = e.currentTarget.value;
+                      const n = v === "" ? null : Number(v);
+                      setTotalMarks(n);
+                    }}
+                    className="w-24 rounded-md border border-input bg-muted/40 px-2 py-2 text-sm"
+                    placeholder="Marks"
+                  />
                 </div>
 
                 <div className="flex items-center gap-2">
@@ -965,10 +1050,29 @@ export default function AnimatedAIChat({
                   </motion.button>
                   <motion.button
                     type="button"
-                    onClick={handleSendMessage}
+                    onClick={async () => {
+                      if (!selectedClass)
+                        return toast({ title: "Select class", description: "Choose a class" });
+                      if (!selectedSubject)
+                        return toast({ title: "Select subject", description: "Choose a subject" });
+                      if (!selectedPdfPath)
+                        return toast({ title: "Select chapter", description: "Choose a chapter PDF" });
+                      if (!file)
+                        return toast({ title: "Missing PDF", description: "Attach a PDF to continue." });
+                      const marks = Math.min(100, Math.max(20, Number(totalMarks ?? 0)));
+                      if (!totalMarks || marks < 20)
+                        return toast({ title: "Enter marks", description: "Enter 20–100" });
+                      const prompt = `Generate a complete exam-style question paper for Class ${selectedClass} in the subject "${selectedSubject}" of total ${marks} marks.\n\nStructure requirements:\n1) Section A - MCQs: allocate between 10% and 20% of total marks to MCQs. Each MCQ should be 1 mark and include four options labeled a), b), c), d). Number all MCQs sequentially (Q1, Q2, ...).\n2) Section B - Short Questions: allocate between 30% and 40% of total marks. Each short question should be 4 or 5 marks. Number questions sequentially continuing from MCQs.\n3) Section C - Long Questions: allocate between 30% and 40% of total marks. Each long question should be 8 to 10 marks. Number questions sequentially continuing from Section B.\n\nContent and formatting instructions:\n- Provide actual question text for every item (do NOT output only a scheme).\n- For MCQs include clear options (a/b/c/d) and ensure only one correct option logically exists (do NOT reveal answers).\n- Short and long questions should be clear, exam-style (descriptive, conceptual or numerical as appropriate), and require the indicated length of answer.\n- Use headings exactly: "Section A - MCQs", "Section B - Short Questions", "Section C - Long Questions".\n- Use numbering like Q1, Q2, Q3 ... across the paper.\n- Ensure the marks per question and number of questions sum exactly to the total ${marks} marks.`;
+                      try {
+                        setIsTyping(true);
+                        await onSubmit({ file, query: prompt });
+                      } finally {
+                        setIsTyping(false);
+                      }
+                    }}
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.98 }}
-                    disabled={loading || isTyping || !value.trim()}
+                    disabled={loading || isTyping}
                     className={cn(
                       "rounded-lg px-4 py-2 text-sm font-medium transition-all",
                       "flex items-center gap-2",
@@ -983,7 +1087,7 @@ export default function AnimatedAIChat({
                       <SendIcon className="h-4 w-4" />
                     )}
                     <span>
-                      {loading || isTyping ? "Generating..." : "Send"}
+                      {loading || isTyping ? "Generating..." : "Generate"}
                     </span>
                   </motion.button>
                 </div>

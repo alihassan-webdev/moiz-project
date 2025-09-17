@@ -707,24 +707,48 @@ export default function Index() {
                         doc.text(header, margin, y);
                         y += 20;
 
-                        const lines = (result || "").split(/\n/);
+                        const rawText = (result || "")
+                          .replace(/\r\n/g, "\n")
+                          .replace(/\n{3,}/g, "\n\n");
+
+                        const lineHeight = 13;
+                        const paraGap = 8;
+                        const pageHeight = doc.internal.pageSize.getHeight();
+                        const usableWidth = pageWidth - margin * 2;
+
                         doc.setFontSize(11);
-                        for (const line of lines) {
-                          const split = doc.splitTextToSize(
-                            line,
-                            pageWidth - margin * 2,
-                          );
-                          for (const s of split) {
-                            if (
-                              y >
-                              doc.internal.pageSize.getHeight() - margin
-                            ) {
-                              doc.addPage();
-                              y = margin;
-                            }
-                            doc.text(s, margin, y);
-                            y += 14;
+
+                        function ensurePageSpace(linesNeeded = 1) {
+                          if (y + lineHeight * linesNeeded > pageHeight - margin) {
+                            doc.addPage();
+                            y = margin;
                           }
+                        }
+
+                        const paragraphs = rawText.split(/\n\s*\n/);
+                        for (const para of paragraphs) {
+                          const text = para.trim();
+                          if (!text) {
+                            y += paraGap;
+                            continue;
+                          }
+
+                          const isSection = /^\s*Section\s+[A-Z0-9\-–].*/i.test(text);
+                          if (isSection) {
+                            doc.setFont("helvetica", "bold");
+                            doc.setFontSize(13);
+                          } else {
+                            doc.setFont("helvetica", "normal");
+                            doc.setFontSize(11);
+                          }
+
+                          const wrapped = doc.splitTextToSize(text, usableWidth);
+                          for (const s of wrapped) {
+                            ensurePageSpace();
+                            doc.text(s, margin, y);
+                            y += lineHeight;
+                          }
+                          y += paraGap;
                         }
 
                         doc.save(filename);

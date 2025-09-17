@@ -236,11 +236,11 @@
 .loader { position: absolute; top: 0; bottom: 0; left: 0; right: 0; }
 .jimu-primary-loading:before,
 .jimu-primary-loading:after { position: absolute; top: 0; content: ""; }
-.jimu-primary-loading:before { left: -12px; }
-.jimu-primary-loading:after { left: 12px; -webkit-animation-delay: 0.32s !important; animation-delay: 0.32s !important; }
+.jimu-primary-loading:before { left: -9px; }
+.jimu-primary-loading:after { left: 9px; -webkit-animation-delay: 0.32s !important; animation-delay: 0.32s !important; }
 .jimu-primary-loading:before,
 .jimu-primary-loading:after,
-.jimu-primary-loading { background: #000; -webkit-animation: loading-keys-app-loading 0.8s infinite ease-in-out; animation: loading-keys-app-loading 0.8s infinite ease-in-out; width: 8px; height: 20px; }
-.jimu-primary-loading { text-indent: -9999em; margin: auto; position: absolute; right: calc(50% - 4px); top: calc(50% - 10px); -webkit-animation-delay: 0.16s !important; animation-delay: 0.16s !important; }
-@-webkit-keyframes loading-keys-app-loading { 0%,80%,100% { opacity: .75; box-shadow: 0 0 #000; height: 20px; } 40% { opacity: 1; box-shadow: 0 -6px #000; height: 26px; } }
-@keyframes loading-keys-app-loading { 0%,80%,100% { opacity: .75; box-shadow: 0 0 #000; height: 20px; } 40% { opacity: 1; box-shadow: 0 -6px #000; height: 26px; } }
+.jimu-primary-loading { background: #000; -webkit-animation: loading-keys-app-loading 0.8s infinite ease-in-out; animation: loading-keys-app-loading 0.8s infinite ease-in-out; width: 6px; height: 16px; }
+.jimu-primary-loading { text-indent: -9999em; margin: auto; position: absolute; right: calc(50% - 3px); top: calc(50% - 8px); -webkit-animation-delay: 0.16s !important; animation-delay: 0.16s !important; }
+@-webkit-keyframes loading-keys-app-loading { 0%,80%,100% { opacity: .75; box-shadow: 0 0 #000; height: 16px; } 40% { opacity: 1; box-shadow: 0 -5px #000; height: 22px; } }
+@keyframes loading-keys-app-loading { 0%,80%,100% { opacity: .75; box-shadow: 0 0 #000; height: 16px; } 40% { opacity: 1; box-shadow: 0 -5px #000; height: 22px; } }

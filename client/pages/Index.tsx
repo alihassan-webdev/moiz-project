@@ -792,7 +792,7 @@ export default function Index() {
                         doc.setFont("times", "normal");
                         doc.setFontSize(12);
                         const dateStr = new Date().toLocaleDateString();
-                        const sub1 = `Total Marks: dynamic`; // no exact marks in parsed text; keep professional header
+                        const sub1 = `Total Marks:`;
                         const sub2 = `Generated: ${dateStr}`;
                         doc.text(sub1, margin, y);
                         doc.text(sub2, pageW - margin, y, { align: "right" });

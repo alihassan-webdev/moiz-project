@@ -725,8 +725,8 @@ export default function Index() {
                   <Button
                     aria-label="Download PDF"
                     variant="default"
-                    size="default"
-                    className="shadow-md"
+                    size="icon"
+                    className="shadow-md rounded-full"
                     disabled={!result || !!loading}
                     onClick={async () => {
                       if (!result) return;

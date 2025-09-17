@@ -215,3 +215,33 @@
     0 36px 64px hsl(var(--secondary) / 0.38),
     /* main bottom */ 0 16px 28px hsl(var(--secondary) / 0.24); /* soft inner */
 }
+
+/* Paper view: prevent overlap/overflow and add subtle centered watermark */
+.paper-view {
+  position: relative;
+}
+.paper-watermark::before {
+  content: "Test Paper Generater";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-30deg);
+  font-weight: 800;
+  font-size: clamp(64px, 12vw, 180px);
+  color: hsl(var(--secondary) / 0.08);
+  letter-spacing: 2px;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0; /* behind content */
+}
+.paper-body {
+  position: relative;
+  z-index: 1;
+  overflow-wrap: anywhere; /* break long tokens */
+  word-break: break-word;
+  hyphens: auto;
+  white-space: normal;
+  text-wrap: pretty;
+  line-height: 1.7;
+}

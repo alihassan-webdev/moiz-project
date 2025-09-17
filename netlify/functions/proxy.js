@@ -1,5 +1,19 @@
 exports.handler = async function (event, context) {
-  const EXTERNAL = process.env.PREDICT_ENDPOINT || "https://api-va5v.onrender.com/generate-questions";
+  // CORS preflight
+  if (event.httpMethod === "OPTIONS") {
+    return {
+      statusCode: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+        "Access-Control-Allow-Headers": "*",
+      },
+      body: "",
+    };
+  }
+  const EXTERNAL =
+    process.env.PREDICT_ENDPOINT ||
+    "https://api-va5v.onrender.com/generate-questions";
 
   // Build upstream URL including query string
   const url = new URL(EXTERNAL);
@@ -31,12 +45,17 @@ exports.handler = async function (event, context) {
       signal: controller.signal,
     });
 
-    const contentType = resp.headers.get("content-type") || "application/octet-stream";
+    const contentType =
+      resp.headers.get("content-type") || "application/octet-stream";
     const arrayBuffer = await resp.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const isText = contentType.includes("application/json") || contentType.startsWith("text/");
+    const isText =
+      contentType.includes("application/json") ||
+      contentType.startsWith("text/");
 
-    const responseBody = isText ? buffer.toString("utf-8") : buffer.toString("base64");
+    const responseBody = isText
+      ? buffer.toString("utf-8")
+      : buffer.toString("base64");
 
     const responseHeaders = {
       "Access-Control-Allow-Origin": "*",
@@ -62,7 +81,10 @@ exports.handler = async function (event, context) {
     return {
       statusCode: 500,
       headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ error: true, message: err?.message || "Proxy error" }),
+      body: JSON.stringify({
+        error: true,
+        message: err?.message || "Proxy error",
+      }),
     };
   } finally {
     clearTimeout(timeout);

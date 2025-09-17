@@ -1,14 +1,12 @@
 [build]
   command = "npm run build"
-  functions = "netlify/functions"
-  publish = "dist"
+  publish = "dist/"
 
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/proxy/:splat"
+  to = "https://api-va5v.onrender.com/:splat"
   status = 200
 
-# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"

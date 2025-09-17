@@ -832,7 +832,6 @@ export default function Index() {
                             y += 16;
 
                             // Reset box top for new page
-                            // @ts-ignore - captured variable
                             boxTop = y;
                           }
                         }

@@ -860,20 +860,64 @@ export default function Index() {
                             continue;
                           }
 
+                          const measure = (t: string, bold: boolean) => {
+                            doc.setFont("times", bold ? "bold" : "normal");
+                            return doc.getTextWidth(t);
+                          };
+                          const drawStyledLine = (raw: string, baseBold: boolean, x: number, maxW: number) => {
+                            // Split into segments by **bold**
+                            const parts = raw.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((seg) => {
+                              if (/^\*\*[^*]+\*\*$/.test(seg)) {
+                                return { text: seg.slice(2, -2), bold: true };
+                              }
+                              return { text: seg, bold: baseBold };
+                            });
+                            // Tokenize by spaces preserving them
+                            const tokens: { text: string; bold: boolean }[] = [];
+                            for (const p of parts) {
+                              const pieces = p.text.split(/(\s+)/);
+                              for (const piece of pieces) {
+                                if (piece === "") continue;
+                                tokens.push({ text: piece, bold: p.bold });
+                              }
+                            }
+                            let line: { text: string; bold: boolean }[] = [];
+                            let lineW = 0;
+                            let cursorX = x;
+                            const flush = () => {
+                              if (!line.length) return;
+                              ensurePageSpace(1);
+                              cursorX = x;
+                              for (const seg of line) {
+                                doc.setFont("times", seg.bold ? "bold" : "normal");
+                                doc.text(seg.text, cursorX, y);
+                                cursorX += measure(seg.text, seg.bold);
+                              }
+                              y += lineHeight;
+                              line = [];
+                              lineW = 0;
+                            };
+                            for (const tk of tokens) {
+                              const w = measure(tk.text, tk.bold);
+                              if (lineW + w > maxW && tk.text.trim() !== "") {
+                                flush();
+                                // Avoid starting line with plain space
+                                if (tk.text.trim() === "") continue;
+                              }
+                              line.push(tk);
+                              lineW += w;
+                            }
+                            flush();
+                          };
+
                           const lines = text.split(/\n/);
                           for (let i = 0; i < lines.length; i++) {
                             const l = lines[i];
                             const isOption = /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
                             const indent = isOption ? 18 : 0;
-                            const fontBold = isQuestion || (/^\s*Q\d+\./i.test(l));
-                            doc.setFont("times", fontBold ? "bold" : "normal");
-                            doc.setFontSize(fontBold ? 13 : 12);
-                            const wrap = doc.splitTextToSize(l, contentW - indent);
-                            for (const w of wrap) {
-                              ensurePageSpace(1);
-                              doc.text(w, margin + indent, y);
-                              y += lineHeight;
-                            }
+                            const baseBold = isQuestion || (/^\s*Q\d+\./i.test(l));
+                            doc.setFontSize(baseBold ? 13 : 12);
+                            drawStyledLine(l, baseBold, margin + indent, contentW - indent);
                             if (isOption) y -= 3;
                           }
 

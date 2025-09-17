@@ -303,12 +303,14 @@ function ExternalPdfSelector({
             onSetPrompt(generated);
             await onGenerate(generated);
           }}
-          className="rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          className="relative rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
         >
           {loading ? (
             <>
-              <span className="h-2 w-2 rounded-full bg-white/90 animate-pulse" />
-              <span>Generating...</span>
+              <span className="opacity-0">Generating...</span>
+              <div className="loader">
+                <div className="jimu-primary-loading"></div>
+              </div>
             </>
           ) : (
             "Generate"

@@ -215,3 +215,19 @@
     0 36px 64px hsl(var(--secondary) / 0.38),
     /* main bottom */ 0 16px 28px hsl(var(--secondary) / 0.24); /* soft inner */
 }
+
+/* Paper view: prevent overlap/overflow and add subtle centered watermark */
+.paper-view {
+  position: relative;
+  min-height: 60vh;
+}
+.paper-body {
+  position: relative;
+  z-index: 1;
+  overflow-wrap: anywhere; /* break long tokens */
+  word-break: break-word;
+  hyphens: auto;
+  white-space: normal;
+  text-wrap: pretty;
+  line-height: 1.7;
+}

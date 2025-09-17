@@ -143,10 +143,10 @@ function ExternalPdfSelector({
   };
 
   return (
-    <div className="rounded-xl card-yellow-shadow border border-muted/20 bg-card/60 p-6 sm:p-8">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+    <div className="rounded-xl card-yellow-shadow border border-muted/20 bg-card/60 p-8 sm:p-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
         <div>
-          <label className="text-xs text-muted-foreground">Class</label>
+          <label className="text-sm font-medium text-muted-foreground">Class</label>
           <Select
             value={selectedClass}
             onValueChange={(v) => setSelectedClass(v)}
@@ -167,7 +167,7 @@ function ExternalPdfSelector({
         <div
           className={`transition-opacity ${!selectedClass ? "opacity-50 pointer-events-none" : ""}`}
         >
-          <label className="text-xs text-muted-foreground">Subject</label>
+          <label className="text-sm font-medium text-muted-foreground">Subject</label>
           <Select
             value={selectedSubjectName}
             onValueChange={(name) => handleSelectSubject(name)}
@@ -192,7 +192,7 @@ function ExternalPdfSelector({
         <div
           className={`transition-opacity ${!selectedSubjectName ? "opacity-50 pointer-events-none" : ""}`}
         >
-          <label className="text-xs text-muted-foreground">Chapter</label>
+          <label className="text-sm font-medium text-muted-foreground">Chapter</label>
           <Select
             value={selectedSubjectPath}
             onValueChange={(p) => {
@@ -229,7 +229,7 @@ function ExternalPdfSelector({
         <div
           className={`transition-opacity ${!selectedSubjectPath ? "opacity-50 pointer-events-none" : ""}`}
         >
-          <label className="text-xs text-muted-foreground">Total Marks</label>
+          <label className="text-sm font-medium text-muted-foreground">Total Marks</label>
           <div className="flex gap-2 items-center flex-wrap">
             <input
               type="number"
@@ -242,7 +242,7 @@ function ExternalPdfSelector({
                 setTotalMarks(n);
               }}
               disabled={!selectedSubjectPath || !!loading}
-              className="w-24 rounded-md border border-input bg-muted/40 px-2 py-2 text-sm"
+              className="w-28 rounded-md border border-input bg-muted/40 px-3 py-2 text-base"
               placeholder="Marks"
             />
             <button
@@ -250,7 +250,7 @@ function ExternalPdfSelector({
               onClick={() => setTotalMarks(30)}
               disabled={!selectedSubjectPath || !!loading}
               aria-pressed={totalMarks === 30}
-              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 30 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+              className={`rounded-md px-4 py-2 text-base border ${totalMarks === 30 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
             >
               30
             </button>
@@ -259,7 +259,7 @@ function ExternalPdfSelector({
               onClick={() => setTotalMarks(50)}
               disabled={!selectedSubjectPath || !!loading}
               aria-pressed={totalMarks === 50}
-              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 50 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+              className={`rounded-md px-4 py-2 text-base border ${totalMarks === 50 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
             >
               50
             </button>
@@ -268,18 +268,18 @@ function ExternalPdfSelector({
               onClick={() => setTotalMarks(100)}
               disabled={!selectedSubjectPath || !!loading}
               aria-pressed={totalMarks === 100}
-              className={`rounded-md px-3 py-2 text-sm border ${totalMarks === 100 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
+              className={`rounded-md px-4 py-2 text-base border ${totalMarks === 100 ? "bg-secondary text-secondary-foreground border-secondary" : "bg-muted/40 text-foreground/90 border-input hover:bg-muted/60"}`}
             >
               100
             </button>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Enter 20–100 or use quick buttons
           </p>
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground">
+          <label className="text-sm font-medium text-muted-foreground">
             Institute Name
           </label>
           <input
@@ -290,13 +290,13 @@ function ExternalPdfSelector({
               setInstituteName(v);
               onSetInstitute(v);
             }}
-            className="w-full rounded-md border border-input bg-muted/40 px-2 py-2 text-sm"
+            className="w-full rounded-md border border-input bg-muted/40 px-3 py-2 text-base"
             placeholder="Enter institute name"
           />
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2">
+      <div className="mt-4 flex gap-3">
         <button
           disabled={loading}
           onClick={async () => {
@@ -323,7 +323,7 @@ function ExternalPdfSelector({
             onSetPrompt(generated);
             await onGenerate(generated);
           }}
-          className="relative rounded-md bg-secondary px-3 py-2 text-sm text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
+          className="relative rounded-md bg-secondary px-5 py-3 text-base text-secondary-foreground disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-3"
         >
           {loading ? (
             <>
@@ -352,7 +352,7 @@ function ExternalPdfSelector({
             onSetPrompt("");
             onReset();
           }}
-          className="rounded-md bg-muted/40 px-3 py-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          className="rounded-md bg-muted/40 px-5 py-3 text-base disabled:opacity-60 disabled:cursor-not-allowed"
         >
           Reset
         </button>

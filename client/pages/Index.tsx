@@ -723,7 +723,7 @@ export default function Index() {
                       try {
                         const { jsPDF } = await import("jspdf");
                         const doc = new jsPDF({ unit: "pt", format: "a4" });
-                        const margin = 56; // wider margins for readability
+                        const margin = 72; // 1 inch margins
                         let y = margin; // start below top margin
                         const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -765,16 +765,16 @@ export default function Index() {
                         const safeQuery = makeFilenameFromPrompt(query);
                         const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
 
-                        doc.setFont("helvetica", "bold");
-                        doc.setFontSize(22);
-                        doc.text("Test Paper Generator", pageWidth / 2, y, {
+                        doc.setFont("times", "bold");
+                        doc.setFontSize(18);
+                        doc.text("Test Paper Generater", pageWidth / 2, y, {
                           align: "center",
                         });
                         y += 30;
 
                         const dateStr = new Date().toLocaleString();
                         const promptText = (query || "").trim();
-                        doc.setFont("helvetica", "normal");
+                        doc.setFont("times", "normal");
                         doc.setFontSize(12);
                         const header = `Query: ${promptText}`;
                         doc.text(header, margin, y);
@@ -788,21 +788,22 @@ export default function Index() {
                           .replace(/\r\n/g, "\n")
                           .replace(/\n{3,}/g, "\n\n");
 
-                        const lineHeight = 16; // more generous leading
-                        const paraGap = 10;
+                        const lineHeight = 18; // 1.5x-ish line spacing
+                        const paraGap = 12;
                         const pageHeight = doc.internal.pageSize.getHeight();
                         const usableWidth = pageWidth - margin * 2;
 
-                        doc.setFontSize(11);
+                        doc.setFont("times", "normal");
+                        doc.setFontSize(12);
 
                         function ensurePageSpace(linesNeeded = 1) {
                           if (y + lineHeight * linesNeeded > pageHeight - margin) {
                             doc.addPage();
                             y = margin;
                             // running header on every new page
-                            doc.setFont("helvetica", "bold");
+                            doc.setFont("times", "bold");
                             doc.setFontSize(12);
-                            doc.text("Test Paper Generator", margin, y);
+                            doc.text("Test Paper Generater", margin, y);
                             doc.setDrawColor(220);
                             doc.setLineWidth(0.5);
                             doc.line(margin, y + 6, pageWidth - margin, y + 6);
@@ -822,14 +823,14 @@ export default function Index() {
                           const isQuestionLine = /^(?:q\s*\d+|\d+[\.)]|\(\d+\))\s+/i.test(text);
 
                           if (isSection) {
-                            doc.setFont("helvetica", "bold");
-                            doc.setFontSize(14);
+                            doc.setFont("times", "bold");
+                            doc.setFontSize(16);
                           } else if (isQuestionLine) {
-                            doc.setFont("helvetica", "bold");
-                            doc.setFontSize(12);
+                            doc.setFont("times", "bold");
+                            doc.setFontSize(13);
                           } else {
-                            doc.setFont("helvetica", "normal");
-                            doc.setFontSize(11);
+                            doc.setFont("times", "normal");
+                            doc.setFontSize(12);
                           }
 
                           const lines = text.split(/\n/);
@@ -848,16 +849,23 @@ export default function Index() {
                           y += paraGap;
                         }
 
-                        // Footer with page numbers and timestamp
+                        // Add watermark and footer on each page
                         const totalPages = doc.getNumberOfPages();
                         for (let i = 1; i <= totalPages; i++) {
                           doc.setPage(i);
+                          // Watermark
+                          const cx = doc.internal.pageSize.getWidth() / 2;
+                          const cy = doc.internal.pageSize.getHeight() / 2;
+                          doc.setFont("times", "bold");
+                          doc.setFontSize(64);
+                          doc.setTextColor(210);
+                          doc.text("Test Paper Generater", cx, cy, { align: "center", angle: 45 });
+                          // Footer page number
+                          doc.setFont("times", "normal");
                           doc.setFontSize(10);
-                          doc.setFont("helvetica", "normal");
                           doc.setTextColor(120);
-                          const footerY = pageHeight - 20;
-                          doc.text(`Page ${i} of ${totalPages}`, pageWidth / 2, footerY, { align: "center" });
-                          doc.text(dateStr, pageWidth - margin, footerY, { align: "right" });
+                          const footerY = doc.internal.pageSize.getHeight() - 30;
+                          doc.text(`Page ${i} of ${totalPages}`, doc.internal.pageSize.getWidth() / 2, footerY, { align: "center" });
                           doc.setTextColor(0);
                         }
 

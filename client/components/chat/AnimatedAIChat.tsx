@@ -563,7 +563,7 @@ export default function AnimatedAIChat({
                         try {
                           const { jsPDF } = await import("jspdf");
                           const doc = new jsPDF({ unit: "pt", format: "a4" });
-                          const margin = 56;
+                          const margin = 72;
                           let y = margin;
                           const pageWidth = doc.internal.pageSize.getWidth();
 
@@ -620,9 +620,9 @@ export default function AnimatedAIChat({
                           const filename = `${safeQuery}_${new Date().toISOString().replace(/[:.]/g, "-")}.pdf`;
 
                           // First page heading: Test Paper Generator
-                          doc.setFont("helvetica", "bold");
-                          doc.setFontSize(22);
-                          doc.text("Test Paper Generator", pageWidth / 2, y, {
+                          doc.setFont("times", "bold");
+                          doc.setFontSize(18);
+                          doc.text("Test Paper Generater", pageWidth / 2, y, {
                             align: "center",
                           });
                           y += 30;
@@ -661,18 +661,18 @@ export default function AnimatedAIChat({
                           }
 
                           doc.setFontSize(12);
-                          doc.setFont("helvetica", "normal");
+                          doc.setFont("times", "normal");
                           const summaryLines = doc.splitTextToSize(
                             summaryLine,
                             pageWidth - margin * 2,
                           );
                           doc.text(summaryLines, margin, y);
-                          y += summaryLines.length * 14 + 8;
+                          y += summaryLines.length * 18 + 10;
 
                           doc.setDrawColor(200);
                           doc.setLineWidth(0.5);
                           doc.line(margin, y, pageWidth - margin, y);
-                          y += 12;
+                          y += 16;
 
                           // Content: parse markdown-like headings and paragraphs (skip echoing the prompt if present)
                           const rawLines = (result || "").split(/\n/);
@@ -741,42 +741,42 @@ export default function AnimatedAIChat({
                             // heading
                             if (/^#{1}\s+/.test(line)) {
                               doc.setFontSize(16);
-                              doc.setFont("helvetica", "bold");
+                              doc.setFont("times", "bold");
                               const text = line.replace(/^#{1}\s+/, "");
                               const split = doc.splitTextToSize(
                                 text,
                                 pageWidth - margin * 2,
                               );
                               if (
-                                y + split.length * 14 >
-                                doc.internal.pageSize.getHeight() - 60
+                                y + split.length * 18 >
+                                doc.internal.pageSize.getHeight() - margin
                               ) {
                                 doc.addPage();
-                                y = 60;
+                                y = margin;
                               }
                               doc.text(split, margin, y);
                               y += split.length * 14 + 8;
                             } else if (/^#{2,}/.test(line)) {
                               doc.setFontSize(14);
-                              doc.setFont("helvetica", "bold");
+                              doc.setFont("times", "bold");
                               const text = line.replace(/^#{1,}\s+/, "");
                               const split = doc.splitTextToSize(
                                 text,
                                 pageWidth - margin * 2,
                               );
                               if (
-                                y + split.length * 14 >
-                                doc.internal.pageSize.getHeight() - 60
+                                y + split.length * 18 >
+                                doc.internal.pageSize.getHeight() - margin
                               ) {
                                 doc.addPage();
-                                y = 60;
+                                y = margin;
                               }
                               doc.text(split, margin, y);
                               y += split.length * 14 + 6;
                             } else {
                               // normal paragraph, handle **bold**
-                              doc.setFontSize(11);
-                              doc.setFont("helvetica", "normal");
+                              doc.setFontSize(12);
+                              doc.setFont("times", "normal");
                               // Replace **bold** with uppercase as simple emphasis in PDF
                               const parts = line.split(/(\*\*.+?\*\*)/g);
                               let cursorX = margin;
@@ -791,45 +791,45 @@ export default function AnimatedAIChat({
                                     /^\*\*(.+)\*\*/,
                                     "$1",
                                   );
-                                  doc.setFont("helvetica", "bold");
+                                  doc.setFont("times", "bold");
                                   const split = doc.splitTextToSize(
                                     boldText,
                                     pageWidth - margin * 2,
                                   );
                                   // If wrap, just print as normal (simplify)
                                   if (
-                                    y + split.length * 12 >
-                                    doc.internal.pageSize.getHeight() - 60
+                                    y + split.length * 18 >
+                                    doc.internal.pageSize.getHeight() - margin
                                   ) {
                                     doc.addPage();
-                                    y = 60;
+                                    y = margin;
                                   }
                                   doc.text(split, margin, y);
-                                  y += split.length * 12;
-                                  doc.setFont("helvetica", "normal");
+                                  y += split.length * 18;
+                                  doc.setFont("times", "normal");
                                 } else {
                                   const split = doc.splitTextToSize(
                                     part,
                                     pageWidth - margin * 2,
                                   );
                                   if (
-                                    y + split.length * 12 >
-                                    doc.internal.pageSize.getHeight() - 60
+                                    y + split.length * 18 >
+                                    doc.internal.pageSize.getHeight() - margin
                                   ) {
                                     doc.addPage();
-                                    y = 60;
+                                    y = margin;
                                   }
                                   doc.text(split, margin, y);
-                                  y += split.length * 12;
+                                  y += split.length * 18;
                                 }
                               }
-                              y += 6;
+                              y += 8;
                             }
 
                             // page break if near bottom
-                            if (y > doc.internal.pageSize.getHeight() - 80) {
+                            if (y > doc.internal.pageSize.getHeight() - margin) {
                               doc.addPage();
-                              y = 60;
+                              y = margin;
                             }
                           }
 

@@ -785,7 +785,9 @@ export default function Index() {
                         // Cover/header
                         doc.setFont("times", "bold");
                         doc.setFontSize(22);
-                        doc.text("Test Paper Generater", pageW / 2, y, { align: "center" });
+                        doc.text("Test Paper Generater", pageW / 2, y, {
+                          align: "center",
+                        });
                         y += 28; // extra spacing retained
                         doc.setDrawColor(190);
                         doc.setLineWidth(1);
@@ -795,12 +797,18 @@ export default function Index() {
                         doc.setFont("times", "normal");
                         doc.setFontSize(12);
                         const dateStr = new Date().toLocaleDateString();
-                        const marksMatch = (query || "").match(/total\s+(\d{1,3})\s*marks/i);
-                        const totalMarks = marksMatch ? Number(marksMatch[1]) : undefined;
+                        const marksMatch = (query || "").match(
+                          /total\s+(\d{1,3})\s*marks/i,
+                        );
+                        const totalMarks = marksMatch
+                          ? Number(marksMatch[1])
+                          : undefined;
                         if (typeof totalMarks === "number") {
                           doc.text(`Total Marks: ${totalMarks}`, margin, y);
                         }
-                        doc.text(`Generated: ${dateStr}`, pageW - margin, y, { align: "right" });
+                        doc.text(`Generated: ${dateStr}`, pageW - margin, y, {
+                          align: "right",
+                        });
                         y += 18;
 
                         // Light bordered content box for professional look
@@ -810,11 +818,16 @@ export default function Index() {
                         const boxBottomMargin = margin;
 
                         // Text content
-                        const rawText = (result || "").replace(/\r\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+                        const rawText = (result || "")
+                          .replace(/\r\n/g, "\n")
+                          .replace(/\n{3,}/g, "\n\n");
                         const cleaned = rawText
                           .split("\n")
                           .filter((l) => !/^\s*\**\s*Distribution:/i.test(l))
-                          .filter((l) => !/^\s*\**\s*Class\s*\d+.*Exam\s*Paper/i.test(l))
+                          .filter(
+                            (l) =>
+                              !/^\s*\**\s*Class\s*\d+.*Exam\s*Paper/i.test(l),
+                          )
                           .join("\n");
                         const paragraphs = cleaned.split(/\n\s*\n/);
 
@@ -829,8 +842,11 @@ export default function Index() {
                             doc.roundedRect(
                               boxLeft - BORDER_PAD_X,
                               boxTop - BORDER_PAD_Y_TOP,
-                              (boxRight - boxLeft) + BORDER_PAD_X * 2,
-                              (y - boxTop) + BORDER_PAD_Y_TOP + BORDER_PAD_Y_BOTTOM,
+                              boxRight - boxLeft + BORDER_PAD_X * 2,
+                              y -
+                                boxTop +
+                                BORDER_PAD_Y_TOP +
+                                BORDER_PAD_Y_BOTTOM,
                               6,
                               6,
                             );
@@ -855,11 +871,18 @@ export default function Index() {
 
                         for (const para of paragraphs) {
                           const text = para.trim();
-                          if (!text) { y += paraGap; continue; }
+                          if (!text) {
+                            y += paraGap;
+                            continue;
+                          }
 
-                          const isSection = /^\s*(Section\s+[A-Z0-9\-–].*)$/i.test(text);
-                          const isQuestion = /^\s*(Q\.?\s*\d+\.)\s+/i.test(text);
-                          const isOptionLine = /^\s*([A-Da-d][\).]|\([A-Da-d]\))\s+/.test(text);
+                          const isSection =
+                            /^\s*(Section\s+[A-Z0-9\-–].*)$/i.test(text);
+                          const isQuestion = /^\s*(Q\.?\s*\d+\.)\s+/i.test(
+                            text,
+                          );
+                          const isOptionLine =
+                            /^\s*([A-Da-d][\).]|\([A-Da-d]\))\s+/.test(text);
 
                           if (isSection) {
                             doc.setFont("times", "bold");
@@ -878,16 +901,25 @@ export default function Index() {
                             doc.setFont("times", bold ? "bold" : "normal");
                             return doc.getTextWidth(t);
                           };
-                          const drawStyledLine = (raw: string, baseBold: boolean, x: number, maxW: number) => {
+                          const drawStyledLine = (
+                            raw: string,
+                            baseBold: boolean,
+                            x: number,
+                            maxW: number,
+                          ) => {
                             // Split into segments by **bold**
-                            const parts = raw.split(/(\*\*[^*]+\*\*)/g).filter(Boolean).map((seg) => {
-                              if (/^\*\*[^*]+\*\*$/.test(seg)) {
-                                return { text: seg.slice(2, -2), bold: true };
-                              }
-                              return { text: seg, bold: baseBold };
-                            });
+                            const parts = raw
+                              .split(/(\*\*[^*]+\*\*)/g)
+                              .filter(Boolean)
+                              .map((seg) => {
+                                if (/^\*\*[^*]+\*\*$/.test(seg)) {
+                                  return { text: seg.slice(2, -2), bold: true };
+                                }
+                                return { text: seg, bold: baseBold };
+                              });
                             // Tokenize by spaces preserving them
-                            const tokens: { text: string; bold: boolean }[] = [];
+                            const tokens: { text: string; bold: boolean }[] =
+                              [];
                             for (const p of parts) {
                               const pieces = p.text.split(/(\s+)/);
                               for (const piece of pieces) {
@@ -903,7 +935,10 @@ export default function Index() {
                               ensurePageSpace(1);
                               cursorX = x;
                               for (const seg of line) {
-                                doc.setFont("times", seg.bold ? "bold" : "normal");
+                                doc.setFont(
+                                  "times",
+                                  seg.bold ? "bold" : "normal",
+                                );
                                 doc.text(seg.text, cursorX, y);
                                 cursorX += measure(seg.text, seg.bold);
                               }
@@ -927,13 +962,20 @@ export default function Index() {
                           const lines = text.split(/\n/);
                           for (let i = 0; i < lines.length; i++) {
                             let l = lines[i];
-                            const isOption = /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
+                            const isOption =
+                              /^\s*(?:[A-Da-d][\).]|\([A-Da-d]\))\s+/.test(l);
                             const indent = isOption ? 18 : 0;
                             // Normalize "Q1." -> "Q.1."
                             l = l.replace(/^(\s*)Q\s*(\d+)\./i, "$1Q.$2.");
-                            const baseBold = isQuestion || (/^\s*Q\.?\s*\d+\./i.test(l));
+                            const baseBold =
+                              isQuestion || /^\s*Q\.?\s*\d+\./i.test(l);
                             doc.setFontSize(baseBold ? 13 : 12);
-                            drawStyledLine(l, baseBold, margin + indent, contentW - indent);
+                            drawStyledLine(
+                              l,
+                              baseBold,
+                              margin + indent,
+                              contentW - indent,
+                            );
                             if (isOption) y -= 3;
                           }
 
@@ -946,8 +988,8 @@ export default function Index() {
                         doc.roundedRect(
                           boxLeft - BORDER_PAD_X,
                           boxTop - BORDER_PAD_Y_TOP,
-                          (boxRight - boxLeft) + BORDER_PAD_X * 2,
-                          (y - boxTop) + BORDER_PAD_Y_TOP + BORDER_PAD_Y_BOTTOM,
+                          boxRight - boxLeft + BORDER_PAD_X * 2,
+                          y - boxTop + BORDER_PAD_Y_TOP + BORDER_PAD_Y_BOTTOM,
                           6,
                           6,
                         );
@@ -959,14 +1001,22 @@ export default function Index() {
                           doc.setFont("times", "bold");
                           doc.setFontSize(12);
                           doc.setTextColor(200);
-                          doc.text("Test Paper Generater", pageW / 2, pageH - 28, { align: "center" });
+                          doc.text(
+                            "Test Paper Generater",
+                            pageW / 2,
+                            pageH - 28,
+                            { align: "center" },
+                          );
                           doc.setTextColor(0);
                         }
 
                         doc.save(filename);
                       } catch (err) {
                         console.error(err);
-                        toast({ title: "Download failed", description: "Could not generate PDF." });
+                        toast({
+                          title: "Download failed",
+                          description: "Could not generate PDF.",
+                        });
                       }
                     }}
                   >

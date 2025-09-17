@@ -797,8 +797,10 @@ export default function Index() {
                         const dateStr = new Date().toLocaleDateString();
                         const marksMatch = (query || "").match(/total\s+(\d{1,3})\s*marks/i);
                         const totalMarks = marksMatch ? Number(marksMatch[1]) : undefined;
-                        const metaRight = `Generated: ${dateStr}${totalMarks ? ` • Total Marks: ${totalMarks}` : ""}`;
-                        doc.text(metaRight, pageW - margin, y, { align: "right" });
+                        if (typeof totalMarks === "number") {
+                          doc.text(`Total Marks: ${totalMarks}`, margin, y);
+                        }
+                        doc.text(`Generated: ${dateStr}`, pageW - margin, y, { align: "right" });
                         y += 18;
 
                         // Light bordered content box for professional look

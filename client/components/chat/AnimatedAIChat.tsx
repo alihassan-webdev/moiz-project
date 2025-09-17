@@ -833,18 +833,23 @@ export default function AnimatedAIChat({
                             }
                           }
 
-                          // Footer with page numbers and timestamp on each page
+                          // Watermark and centered page numbers on each page
                           const pageCount = doc.getNumberOfPages();
                           for (let i = 1; i <= pageCount; i++) {
                             doc.setPage(i);
-                            doc.setFont("helvetica", "normal");
+                            const pageW = doc.internal.pageSize.getWidth();
+                            const pageH = doc.internal.pageSize.getHeight();
+                            // Watermark
+                            doc.setFont("times", "bold");
+                            doc.setFontSize(64);
+                            doc.setTextColor(210);
+                            doc.text("Test Paper Generater", pageW / 2, pageH / 2, { align: "center", angle: 45 });
+                            // Footer page numbers
+                            doc.setFont("times", "normal");
                             doc.setFontSize(10);
                             doc.setTextColor(150);
-                            const footerY = doc.internal.pageSize.getHeight() - 24;
-                            const pageW = doc.internal.pageSize.getWidth();
-                            const dateStr = new Date().toLocaleString();
+                            const footerY = pageH - 30;
                             doc.text(`Page ${i} of ${pageCount}`, pageW / 2, footerY, { align: "center" });
-                            doc.text(dateStr, pageW - margin, footerY, { align: "right" });
                             doc.setTextColor(0);
                           }
 

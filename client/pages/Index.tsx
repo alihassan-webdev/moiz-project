@@ -14,6 +14,7 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { Download } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type ApiResult = string;
 

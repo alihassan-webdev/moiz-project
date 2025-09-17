@@ -901,7 +901,6 @@ export default function Index() {
                     }}
                   >
                     <Download className="h-4 w-4" />
-                    Download PDF
                   </Button>
                 </div>
               </div>

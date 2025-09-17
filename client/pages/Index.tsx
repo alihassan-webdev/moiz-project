@@ -722,7 +722,7 @@ export default function Index() {
           </div>
 
           {result && (
-            <div className="order-1 mt-0 w-full max-w-3xl mx-auto">
+            <div className="order-1 mt-0 w-full max-w-5xl mx-auto">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold">Result</h3>
                 <div className="flex items-center gap-2">

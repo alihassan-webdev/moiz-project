@@ -724,9 +724,9 @@ export default function Index() {
                 <div className="flex items-center gap-2">
                   <Button
                     aria-label="Download PDF"
-                    variant="default"
+                    variant="secondary"
                     size="icon"
-                    className="shadow-md rounded-full"
+                    className="rounded-full"
                     disabled={!result || !!loading}
                     onClick={async () => {
                       if (!result) return;

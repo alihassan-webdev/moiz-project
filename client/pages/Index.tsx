@@ -132,7 +132,8 @@ function ExternalPdfSelector({
       const f = new File([blob], found.name, { type: "application/pdf" });
       onLoadFile(f);
       setSelectedSubjectPath(path);
-    } catch (err) {
+    } catch (err: any) {
+      if (err?.name === "AbortError") return; // ignore user/navigation aborts silently
       toast({ title: "Load failed", description: "Could not load PDF." });
     }
   };
@@ -391,6 +392,20 @@ export default function Index() {
     if (el) el.value = "";
   };
 
+  // Utility: promise timeout without aborting the underlying fetch
+  const withTimeout = async <T,>(p: Promise<T>, ms: number): Promise<T> => {
+    return await new Promise<T>((resolve, reject) => {
+      const id = setTimeout(() => reject(new Error("timeout")), ms);
+      p.then((v) => {
+        clearTimeout(id);
+        resolve(v);
+      }).catch((e) => {
+        clearTimeout(id);
+        reject(e);
+      });
+    });
+  };
+
   const runSubmit = async (fArg?: File | null, qArg?: string) => {
     setError(null);
     setResult(null);
@@ -420,9 +435,6 @@ export default function Index() {
         } catch {}
       }
 
-      const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), timeoutMs);
-
       try {
         console.debug("Attempting fetch ->", finalUrl, {
           isExternal,
@@ -430,22 +442,24 @@ export default function Index() {
         });
         // If no file attached, send a lightweight JSON body with the query only
         if (!theFile) {
-          const res = await fetch(finalUrl, {
-            method: "POST",
-            signal: controller.signal,
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ query: q }),
-            ...(isExternal
-              ? {
-                  mode: "cors" as const,
-                  credentials: "omit" as const,
-                  referrerPolicy: "no-referrer" as const,
-                }
-              : {}),
-          });
+          const res = await withTimeout(
+            fetch(finalUrl, {
+              method: "POST",
+              headers: {
+                Accept: "application/json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ query: q }),
+              ...(isExternal
+                ? {
+                    mode: "cors" as const,
+                    credentials: "omit" as const,
+                    referrerPolicy: "no-referrer" as const,
+                  }
+                : {}),
+            }),
+            timeoutMs,
+          );
           return res;
         }
 
@@ -458,41 +472,43 @@ export default function Index() {
           form.append("file", theFile);
         }
 
-        const res = await fetch(finalUrl, {
-          method: "POST",
-          body: form,
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-          ...(isExternal
-            ? {
-                mode: "cors" as const,
-                credentials: "omit" as const,
-                referrerPolicy: "no-referrer" as const,
-              }
-            : {}),
-        });
+        const res = await withTimeout(
+          fetch(finalUrl, {
+            method: "POST",
+            body: form,
+            headers: { Accept: "application/json" },
+            ...(isExternal
+              ? {
+                  mode: "cors" as const,
+                  credentials: "omit" as const,
+                  referrerPolicy: "no-referrer" as const,
+                }
+              : {}),
+          }),
+          timeoutMs,
+        );
         return res;
       } catch (err: any) {
         try {
-          if (err?.name === "AbortError") {
-            console.warn("Fetch aborted:", finalUrl, err?.message ?? err);
+          if (err?.message === "timeout") {
+            console.warn("Request timed out:", finalUrl);
           } else if (
             err?.message === "Failed to fetch" ||
             err?.name === "TypeError"
           ) {
-            // Likely network or CORS
             console.warn(
               "Network or CORS error when fetching:",
               finalUrl,
               err?.message ?? err,
             );
+          } else if (err?.name === "AbortError") {
+            // Should not happen now, but silently handle
+            console.warn("Fetch aborted:", finalUrl);
           } else {
             console.warn("Fetch error:", finalUrl, err?.message ?? err);
           }
         } catch {}
         return null;
-      } finally {
-        clearTimeout(t);
       }
     };
 
@@ -573,7 +589,7 @@ export default function Index() {
       }
     } catch (err: any) {
       const msg =
-        err?.name === "AbortError"
+        err?.message === "timeout"
           ? "Request timed out. Please try again."
           : err?.message || "Request failed";
       setError(msg);

@@ -279,7 +279,9 @@ function ExternalPdfSelector({
         </div>
 
         <div>
-          <label className="text-xs text-muted-foreground">Institute Name</label>
+          <label className="text-xs text-muted-foreground">
+            Institute Name
+          </label>
           <input
             type="text"
             value={instituteName}
@@ -811,8 +813,14 @@ export default function Index() {
                         // Cover/header
                         doc.setFont("times", "bold");
                         doc.setFontSize(22);
-                        const headingTitle = (institute && institute.trim()) ? institute.trim() : "Test Paper Generater";
-                        const headerLines = doc.splitTextToSize(headingTitle, pageW - margin * 2);
+                        const headingTitle =
+                          institute && institute.trim()
+                            ? institute.trim()
+                            : "Test Paper Generater";
+                        const headerLines = doc.splitTextToSize(
+                          headingTitle,
+                          pageW - margin * 2,
+                        );
                         doc.text(headerLines, pageW / 2, y, {
                           align: "center",
                         });
@@ -1029,12 +1037,9 @@ export default function Index() {
                           doc.setFont("times", "bold");
                           doc.setFontSize(12);
                           doc.setTextColor(200);
-                          doc.text(
-                            headingTitle,
-                            pageW / 2,
-                            pageH - 28,
-                            { align: "center" },
-                          );
+                          doc.text(headingTitle, pageW / 2, pageH - 28, {
+                            align: "center",
+                          });
                           doc.setTextColor(0);
                         }
 

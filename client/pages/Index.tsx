@@ -799,7 +799,7 @@ export default function Index() {
                         y += 18;
 
                         // Light bordered content box for professional look
-                        const boxTop = y;
+                        let boxTop = y;
                         const boxLeft = margin;
                         const boxRight = pageW - margin;
                         const boxBottomMargin = margin;
